@@ -22,7 +22,7 @@ ipcMain.handle("dialog.showOpenDialog", async (event, arg) => {
 ipcMain.handle("show-error-box", (event, arg) => {
   dialog.showErrorBox(
     "Oops! Something went wrong!",
-    "Help us improve your experience by sending an error report"
+    "Help us improve your experience by sending an error report",
   );
 });
 

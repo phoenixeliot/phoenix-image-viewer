@@ -10,17 +10,23 @@
  * @package : Window Titlebar (Component)
  */
 
-import React, { createRef, useContext, useEffect, useRef, useState } from 'react';
-import titlebarMenus from '@main/window/titlebarMenus';
-import classNames from 'classnames';
-import WindowControls from './WindowControls';
-import context from '@main/window/titlebarContextApi';
-import { WindowContext } from './WindowFrame';
-import './titlebar.scss';
+import React, {
+  createRef,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import titlebarMenus from "@main/window/titlebarMenus";
+import classNames from "classnames";
+import WindowControls from "./WindowControls";
+import context from "@main/window/titlebarContextApi";
+import { WindowContext } from "./WindowFrame";
+import "./titlebar.scss";
 
 type Props = {
   title: string;
-  mode: 'centered-title';
+  mode: "centered-title";
   icon?: string;
 };
 
@@ -42,10 +48,10 @@ const Titlebar: React.FC<Props> = (props) => {
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener("keydown", handleKeyDown);
     };
   }, [menusVisible, menusRef]);
 
@@ -54,7 +60,9 @@ const Titlebar: React.FC<Props> = (props) => {
       if (activeMenuIndex.current != null) {
         if (
           menusRef[activeMenuIndex.current].current &&
-          !menusRef[activeMenuIndex.current].current?.contains(event.target as Node)
+          !menusRef[activeMenuIndex.current].current?.contains(
+            event.target as Node,
+          )
         ) {
           // console.log('You clicked outside of me!');
           closeActiveMenu();
@@ -63,12 +71,12 @@ const Titlebar: React.FC<Props> = (props) => {
     }
 
     if (activeMenuIndex != null) {
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
       // console.log('added event');
     }
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
       // console.log('remove event');
     };
   }, [activeMenuIndex, menusRef]);
@@ -77,25 +85,25 @@ const Titlebar: React.FC<Props> = (props) => {
     e.stopPropagation();
     e.preventDefault();
 
-    if (menusRef[index].current?.classList.contains('active')) {
+    if (menusRef[index].current?.classList.contains("active")) {
       // close..
       closeActiveMenu();
     } else {
       // open..
-      menusRef[index].current?.classList.add('active');
+      menusRef[index].current?.classList.add("active");
       activeMenuIndex.current = index;
-      menusRef[index].current?.parentElement?.classList.add('active');
+      menusRef[index].current?.parentElement?.classList.add("active");
     }
   }
 
   function onMenuHover(index: number) {
     if (activeMenuIndex.current != null) {
-      menusRef[activeMenuIndex.current].current?.classList.toggle('active');
-      menusRef[index].current?.classList.toggle('active');
-      menusRef[index].current?.parentElement?.classList.toggle('active');
-      menusRef[activeMenuIndex.current].current?.parentElement?.classList.toggle(
-        'active',
-      );
+      menusRef[activeMenuIndex.current].current?.classList.toggle("active");
+      menusRef[index].current?.classList.toggle("active");
+      menusRef[index].current?.parentElement?.classList.toggle("active");
+      menusRef[
+        activeMenuIndex.current
+      ].current?.parentElement?.classList.toggle("active");
 
       activeMenuIndex.current = index;
     }
@@ -103,8 +111,10 @@ const Titlebar: React.FC<Props> = (props) => {
 
   function closeActiveMenu() {
     if (activeMenuIndex.current != null) {
-      menusRef[activeMenuIndex.current].current?.classList.remove('active');
-      menusRef[activeMenuIndex.current]?.current?.parentElement?.classList.remove('active');
+      menusRef[activeMenuIndex.current].current?.classList.remove("active");
+      menusRef[
+        activeMenuIndex.current
+      ]?.current?.parentElement?.classList.remove("active");
       activeMenuIndex.current = null;
     }
   }
@@ -113,7 +123,7 @@ const Titlebar: React.FC<Props> = (props) => {
     closeActiveMenu();
     const c: Record<string, CallableFunction> = context;
     if (action) {
-      if (typeof c[action] === 'function') {
+      if (typeof c[action] === "function") {
         c[action](value);
       } else {
         console.log(`action [${action}] is not available in titlebar context`);
@@ -122,46 +132,46 @@ const Titlebar: React.FC<Props> = (props) => {
   }
 
   return (
-    <div className='window-titlebar'>
+    <div className="window-titlebar">
       {props.icon ? (
-        <section className='window-titlebar-icon'>
-          <img src={props.icon} alt='titlebar icon' />
+        <section className="window-titlebar-icon">
+          <img src={props.icon} alt="titlebar icon" />
         </section>
       ) : (
-        ''
+        ""
       )}
 
       <section
-        className={classNames('window-titlebar-content', {
-          centered: props.mode === 'centered-title',
+        className={classNames("window-titlebar-content", {
+          centered: props.mode === "centered-title",
         })}
       >
-        {menusVisible ? '' : <div className='window-title'>{props.title}</div>}
+        {menusVisible ? "" : <div className="window-title">{props.title}</div>}
       </section>
 
       <section
-        className={classNames('window-titlebar-menu', {
+        className={classNames("window-titlebar-menu", {
           hidden: !menusVisible,
         })}
       >
         {titlebarMenus.map((item, menuIndex) => {
           return (
-            <div className='menu-item' key={`menu_${menuIndex}`}>
+            <div className="menu-item" key={`menu_${menuIndex}`}>
               <div
-                className='menu-title'
+                className="menu-title"
                 onClick={(e) => showMenu(menuIndex, e)}
                 onMouseEnter={() => onMenuHover(menuIndex)}
                 onMouseDown={(e) => e.preventDefault()}
               >
                 {item.name}
               </div>
-              <div className='menu-popup' ref={menusRef[menuIndex]}>
+              <div className="menu-popup" ref={menusRef[menuIndex]}>
                 {item.items?.map((menuItem, menuItemIndex) => {
-                  if (menuItem.name === '__') {
+                  if (menuItem.name === "__") {
                     return (
                       <div
                         key={`menu_${menuIndex}_popup_item_${menuItemIndex}`}
-                        className='popup-item-separator'
+                        className="popup-item-separator"
                       ></div>
                     );
                   }
@@ -169,14 +179,14 @@ const Titlebar: React.FC<Props> = (props) => {
                   return (
                     <div
                       key={`menu_${menuIndex}_popup_item_${menuItemIndex}`}
-                      className='menu-popup-item'
+                      className="menu-popup-item"
                       onClick={() =>
                         handleAction(menuItem.action, menuItem.value)
                       }
                       onMouseDown={(e) => e.preventDefault()}
                     >
-                      <div className='popup-item-name'>{menuItem.name}</div>
-                      <div className='popup-item-shortcut'>
+                      <div className="popup-item-name">{menuItem.name}</div>
+                      <div className="popup-item-shortcut">
                         {menuItem.shortcut}
                       </div>
                     </div>

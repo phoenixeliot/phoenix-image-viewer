@@ -7,8 +7,8 @@
  * @package : Application Sass Stylesheet
 */
 
-@import './dark_theme.scss';
-@import './light_theme.scss';
+@import "./dark_theme.scss";
+@import "./light_theme.scss";
 
 /**
  *==========================================================================
@@ -57,8 +57,7 @@ body {
 /* Grid texture */
 body {
   background-size: 32px 32px;
-  background-image:
-    linear-gradient(to right, #7070700d 1px, transparent 1px),
+  background-image: linear-gradient(to right, #7070700d 1px, transparent 1px),
     linear-gradient(to bottom, #7070700d 1px, transparent 1px);
 }
 
@@ -102,7 +101,7 @@ button {
     background: var(--button-active-bgcolor);
   }
 
-  &>span {
+  & > span {
     color: var(--button-badge-color);
     background-color: var(--button-badge-bgcolor);
     font-size: 12px;
@@ -209,7 +208,7 @@ button {
   box-sizing: border-box;
   border-radius: 4px;
 
-  &>* {
+  & > * {
     display: flex;
   }
 
@@ -220,7 +219,7 @@ button {
     opacity: 0.8;
   }
 
-  &>span {
+  & > span {
     color: gray;
     text-align: right;
   }

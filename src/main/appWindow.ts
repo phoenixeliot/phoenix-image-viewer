@@ -1,6 +1,6 @@
-import { app, BrowserWindow } from 'electron';
-import path from 'path';
-import { registerTitlebarIpc } from '@main/window/titlebarIpc';
+import { app, BrowserWindow } from "electron";
+import path from "path";
+import { registerTitlebarIpc } from "@main/window/titlebarIpc";
 
 // Electron Forge automatically creates these entry points
 declare const APP_WINDOW_WEBPACK_ENTRY: string;
@@ -17,12 +17,12 @@ export function createAppWindow(): BrowserWindow {
   appWindow = new BrowserWindow({
     width: 800,
     height: 600,
-    backgroundColor: '#202020',
+    backgroundColor: "#202020",
     show: false,
     autoHideMenuBar: true,
     frame: false,
-    titleBarStyle: 'hidden',
-    icon: path.resolve('assets/images/appIcon.ico'),
+    titleBarStyle: "hidden",
+    icon: path.resolve("assets/images/appIcon.ico"),
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -37,13 +37,13 @@ export function createAppWindow(): BrowserWindow {
   appWindow.loadURL(APP_WINDOW_WEBPACK_ENTRY);
 
   // Show window when its ready to
-  appWindow.on('ready-to-show', () => appWindow.show());
+  appWindow.on("ready-to-show", () => appWindow.show());
 
   // Register Inter Process Communication for main process
   registerMainIPC();
 
   // Close all windows when main window is closed
-  appWindow.on('close', () => {
+  appWindow.on("close", () => {
     appWindow = null;
     app.quit();
   });
