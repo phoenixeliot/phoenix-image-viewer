@@ -1,6 +1,7 @@
 import { app, BrowserWindow } from "electron";
 import path from "path";
 import { registerTitlebarIpc } from "@main/window/titlebarIpc";
+import { windowStateKeeper } from "@main/stateKeeper";
 
 // Electron Forge automatically creates these entry points
 declare const APP_WINDOW_WEBPACK_ENTRY: string;
@@ -12,16 +13,23 @@ let appWindow: BrowserWindow;
  * Create Application Window
  * @returns {BrowserWindow} Application Window Instance
  */
-export function createAppWindow(): BrowserWindow {
+export async function createAppWindow(): Promise<BrowserWindow> {
+  console.log("Creating new app window");
   // Create new window instance
+
+  // https://stackoverflow.com/questions/51328586/how-to-restore-default-window-size-in-an-electron-app
+  const mainWindowStateKeeper = await windowStateKeeper("main");
+
   appWindow = new BrowserWindow({
-    width: 800,
-    height: 1000,
+    x: mainWindowStateKeeper.x,
+    y: mainWindowStateKeeper.y,
+    width: mainWindowStateKeeper.width || 800,
+    height: mainWindowStateKeeper.height || 1000,
     backgroundColor: "#202020",
     show: false,
     autoHideMenuBar: true,
-    frame: false,
-    titleBarStyle: "hidden",
+    // frame: false,
+    // titleBarStyle: "hidden",
     icon: path.resolve("assets/images/appIcon.ico"),
     webPreferences: {
       nodeIntegration: false,
@@ -33,8 +41,11 @@ export function createAppWindow(): BrowserWindow {
     },
   });
 
+  mainWindowStateKeeper.track(appWindow);
+
   // Load the index.html of the app window.
   appWindow.loadURL(APP_WINDOW_WEBPACK_ENTRY);
+  // appWindow.loadURL("https://boards.4chan.org/gif/");
 
   // Show window when its ready to
   appWindow.on("ready-to-show", () => appWindow.show());
@@ -47,6 +58,10 @@ export function createAppWindow(): BrowserWindow {
     appWindow = null;
     app.quit();
   });
+
+  // appWindow.webContents.on("go-to-random-image" as any, () => {
+  //   console.log("Go to random image!");
+  // });
 
   return appWindow;
 }

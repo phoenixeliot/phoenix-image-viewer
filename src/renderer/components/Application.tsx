@@ -1,13 +1,15 @@
 // import "../../typings/index.d.ts";
 // import "../types.d.ts";
-import React, { useCallback, useEffect, useState } from "react";
-import "@styles/app.scss";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+// import "@styles/app.scss";
 import icons from "@components/icons";
+import { type ipcRenderer } from "electron";
 
 declare global {
   interface Window {
     dialog: any;
     fs: any;
+    ipcRenderer: typeof ipcRenderer;
   }
 }
 
@@ -18,8 +20,89 @@ const Application: React.FC = () => {
   const [darkTheme, setDarkTheme] = useState(true);
   const [versions, setVersions] = useState<Record<string, string>>({});
   const [filePaths, setFilePaths] = useState([]);
-  const [currentImageIndex, setCurrentImageIndex] = useState(1);
-  console.log({ filePaths });
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  // console.log({ filePaths });
+  const [randomImageIndex, setRandomImageIndex] = useState(0);
+  const numImages = filePaths.length;
+
+  const fileExtensions = filePaths
+    .filter((path) => path.includes("."))
+    .map((filePath) => {
+      const extension = filePath.split(".").at(-1);
+      return extension;
+    })
+    .reduce((set, extension) => {
+      set.add(extension);
+      return set;
+    }, new Set());
+
+  const randomIndexMap = useMemo(() => {
+    const unshuffled = [];
+    for (let i = 0; i < filePaths.length; i++) {
+      unshuffled.push(i);
+    }
+    const shuffled = [];
+    for (let i = 0; i < filePaths.length; i++) {
+      const item = unshuffled.splice(
+        Math.floor(Math.random() * unshuffled.length),
+        1,
+      );
+      shuffled.push(...item);
+    }
+    return shuffled;
+  }, [filePaths.length]);
+
+  const reverseRandomIndexMap = useMemo(() => {
+    const reverseMap: number[] = [];
+    randomIndexMap.forEach((value, index) => {
+      reverseMap[value] = index;
+    });
+    return reverseMap;
+  }, [randomIndexMap]);
+
+  const goToNextRandomImage = useCallback(() => {
+    if (numImages === 0) return;
+    console.log("Going to next random image");
+    const newRandomIndex = (randomImageIndex + 1) % numImages;
+    const newImageIndex = reverseRandomIndexMap[newRandomIndex];
+    setRandomImageIndex(newRandomIndex);
+    setCurrentImageIndex(newImageIndex);
+    console.log({
+      currentImageIndex,
+      newImageIndex,
+      randomImageIndex,
+      newRandomIndex,
+    });
+  }, [currentImageIndex, numImages, randomImageIndex, reverseRandomIndexMap]);
+
+  const goToPrevRandomImage = useCallback(() => {
+    if (numImages === 0) return;
+    const newRandomIndex = (randomImageIndex + numImages - 1) % numImages;
+    const newImageIndex = reverseRandomIndexMap[newRandomIndex];
+    setRandomImageIndex(newRandomIndex);
+    setCurrentImageIndex(newImageIndex);
+  }, [numImages, randomImageIndex, reverseRandomIndexMap]);
+
+  useEffect(() => {
+    const events = [
+      ["go-to-next-random-image", goToNextRandomImage],
+      ["go-to-prev-random-image", goToPrevRandomImage],
+    ] as const;
+    for (const [event, callback] of events) {
+      window.ipcRenderer.on(event, callback);
+    }
+    return () => {
+      for (const [event, callback] of events) {
+        window.ipcRenderer.off(event, callback);
+      }
+    };
+  });
+
+  // images: 0 1 2 3 4
+  // randomized: 2 4 1 0 3
+  // start: image 0, random index 3
+  // next normal: image 1, random index 2
+  // OR next random from 0: image 3, random index 4
 
   /**
    * On component mount
@@ -66,31 +149,36 @@ const Application: React.FC = () => {
         properties: ["openDirectory"],
       });
       const dirPath = result.filePaths[0];
-      console.log({ dirPath });
-      console.log({ result });
-      console.log(await result);
-      const filenames = await window.fs.readdirSync(dirPath);
+      const filenames: string[] = await window.fs.getImagePaths(dirPath);
+      console.dir({ filenames });
       setFilePaths(
-        filenames.map((filename: string) => {
-          // compat: Test this on windows paths
-          // return new URL(`file://${dirPath}/${filename}`).href; // HACK to do path.join type behavior
-          return `local-image://${dirPath}/${filename}`;
-        }),
+        filenames
+          .filter((filePath) => {
+            const filename = filePath.split("/").at(-1);
+            const extension = filename.split(".").at(-1);
+            // if (filename === ".DS_Store") return false;
+            // if (extension != "webm") return false;
+            return true;
+          })
+          .map((filePath) => {
+            // compat: Test this on windows paths
+            // return new URL(`file://${dirPath}/${filename}`).href; // HACK to do path.join type behavior
+            return `local-image://${filePath}`;
+          }),
       );
-      console.log({ filenames });
-      console.log({ filePaths });
-      // document.querySelector("#image-count").textContent = filePaths.length;
     } catch (e) {
       console.error(e);
     }
   }, []);
 
+  const currentImagePath = filePaths[currentImageIndex];
+  const currentImageExtension = currentImagePath?.split(".").at(-1);
   return (
     <div id="erwt">
       <div className="">
         <div className="center">
           <button onClick={handleClickOpenFolder}>Open folder</button>
-          <span className="themed">
+          <span className="themed" style={{ backgroundColor: "black" }}>
             Showing image {currentImageIndex + 1}/
             <span>{filePaths.length}</span>{" "}
           </span>
@@ -101,24 +189,22 @@ const Application: React.FC = () => {
             <button onClick={() => setCurrentImageIndex((i) => i - 1)}>
               Prev
             </button>
-            <button
-              onClick={() =>
-                setCurrentImageIndex((i) =>
-                  Math.floor(Math.random() * filePaths.length),
-                )
-              }
-            >
-              Random
-            </button>
           </div>
-          {filePaths[currentImageIndex] ?? ""}
+          <div style={{ backgroundColor: "black" }}>{currentImagePath}</div>
         </div>
       </div>
-      <div className="image-viewer">
-        <img
-          className="image-viewer__image"
-          src={filePaths[currentImageIndex]}
-        />
+      <div className="-image-viewer">
+        {currentImageExtension === "webm" ? (
+          <video
+            className="image-viewer__image"
+            src={currentImagePath}
+            loop
+            controls
+            autoPlay
+          />
+        ) : (
+          <img className="image-viewer__image" src={currentImagePath} />
+        )}
       </div>
     </div>
   );

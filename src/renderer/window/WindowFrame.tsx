@@ -48,11 +48,11 @@ const WindowFrame: React.FC<Props> = (props) => {
       {/* Reference creator */}
       <div className="start-electron-window" ref={itsRef}></div>
       {/* Window Titlebar */}
-      <Titlebar
+      {/* <Titlebar
         title={props.title ?? "Electron Window"}
         mode="centered-title"
         // icon={logo}
-      />
+      /> */}
       {/* Window Content (Application to render) */}
       <div className="window-content">{props.children}</div>
     </WindowContext.Provider>

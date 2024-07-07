@@ -1,9 +1,8 @@
 import "@main/window/windowPreload";
-console.log("[ERWT]: Preload execution started");
-
 const { contextBridge } = require("electron/renderer");
 
 // Say something
+console.log("[ERWT]: Preload execution started");
 
 // Stuff from before merging ERWT
 contextBridge.exposeInMainWorld("versions", {
@@ -18,8 +17,19 @@ contextBridge.exposeInMainWorld("dialog", {
   showOpenDialog: () => ipcRenderer.invoke("dialog.showOpenDialog"),
 });
 contextBridge.exposeInMainWorld("fs", {
-  readdirSync: (dirPath: string) =>
-    ipcRenderer.invoke("fs.readdirSync", dirPath),
+  getImagePaths: (dirPath: string, options = {}) =>
+    ipcRenderer.invoke("getImagePaths", dirPath, options),
+});
+
+// Expose IPC methods
+contextBridge.exposeInMainWorld("ipcRenderer", {
+  // TODO[security]: Make more specific
+  on: (name: string, callback: any) => {
+    ipcRenderer.on(name, callback);
+  },
+  off: (name: string, callback: any) => {
+    ipcRenderer.off(name, callback);
+  },
 });
 
 // Get versions
@@ -50,5 +60,5 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   // Set versions to app data
-  app.setAttribute("data-versions", JSON.stringify(versions));
+  app?.setAttribute("data-versions", JSON.stringify(versions));
 });

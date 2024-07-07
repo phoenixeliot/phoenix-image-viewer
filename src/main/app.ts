@@ -2,9 +2,10 @@ import { app, BrowserWindow, Menu, MenuItem, net, protocol } from "electron";
 import { createAppWindow } from "./appWindow";
 import "./dialog/dialog";
 import "./filesystem/filesystem";
-// import "./window/menu";
+import "./window/menu";
 import path from "path";
 import { pathToFileURL } from "url";
+import fs from "fs";
 
 protocol.registerSchemesAsPrivileged([
   {
@@ -12,17 +13,51 @@ protocol.registerSchemesAsPrivileged([
     privileges: {
       standard: true,
       secure: false,
-      supportFetchAPI: false,
+      stream: true,
+      // supportFetchAPI: true,
     },
   },
 ]);
 
 app.whenReady().then(() => {
-  protocol.handle("local-image", (req) => {
+  protocol.handle("local-image", async (req) => {
     console.log("Handling local-image:", req);
     const pathToMedia = "/" + req.url.replace("local-image://", "");
     console.log({ pathToMedia });
+
     return net.fetch(`file://${pathToMedia}`);
+
+    const mediaData = await fs.promises.readFile(pathToMedia);
+
+    const mimeTypesMap = {
+      avi: "video/x-msvideo",
+      mp4: "video/mp4",
+      mpeg: "video/mpeg",
+      ogv: "video/ogg",
+      ts: "video/mp2t",
+      webm: "video/webm",
+      "3gp": "video/3gpp;", // audio/3gpp if it doesn't contain video
+      "3g2": "video/3gpp2;", // audio/3gpp2 if it doesn't contain video
+      apng: "image/apng",
+      avif: "image/avif",
+      bmp: "image/bmp",
+      gif: "image/gif",
+      ico: "image/vnd.microsoft.icon",
+      jpeg: "image/jpeg",
+      jpg: "image/jpeg",
+      png: "image/png",
+      svg: "image/svg+xml",
+      tif: "image/tiff",
+      tiff: "image/tiff",
+      webp: "image/webp",
+    };
+
+    const extension = pathToMedia
+      .split(".")
+      .at(-1) as keyof typeof mimeTypesMap;
+
+    const mimeType = mimeTypesMap[extension];
+    return new Response(mediaData, { headers: { "Content-Type": mimeType } });
 
     //     const { host, pathname } = new URL(req.url);
     //     // if (host === "bundle") {

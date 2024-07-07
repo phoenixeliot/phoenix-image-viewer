@@ -15,7 +15,6 @@ ipcMain.handle("dialog.showOpenDialog", async (event, arg) => {
   };
 
   const dialogResult = await dialog.showOpenDialog(null, options);
-  console.log({ dialogResult });
   return dialogResult;
 });
 
