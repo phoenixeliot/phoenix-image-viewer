@@ -1,7 +1,26 @@
 import "@main/window/windowPreload";
+console.log("[ERWT]: Preload execution started");
+
+const { contextBridge } = require("electron/renderer");
 
 // Say something
-console.log("[ERWT] : Preload execution started");
+
+// Stuff from before merging ERWT
+contextBridge.exposeInMainWorld("versions", {
+  node: () => process.versions.node,
+  chrome: () => process.versions.chrome,
+  electron: () => process.versions.electron,
+});
+
+const { dialog, ipcRenderer } = require("electron");
+console.log({ dialog });
+contextBridge.exposeInMainWorld("dialog", {
+  showOpenDialog: () => ipcRenderer.invoke("dialog.showOpenDialog"),
+});
+contextBridge.exposeInMainWorld("fs", {
+  readdirSync: (dirPath: string) =>
+    ipcRenderer.invoke("fs.readdirSync", dirPath),
+});
 
 // Get versions
 window.addEventListener("DOMContentLoaded", () => {

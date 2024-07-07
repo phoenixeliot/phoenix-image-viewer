@@ -1,11 +1,25 @@
-import React, { useEffect, useState } from "react";
+// import "../../typings/index.d.ts";
+// import "../types.d.ts";
+import React, { useCallback, useEffect, useState } from "react";
 import "@styles/app.scss";
 import icons from "@components/icons";
+
+declare global {
+  interface Window {
+    dialog: any;
+    fs: any;
+  }
+}
+
+// TODO: Figure out how to put this in a .d.ts file without it breaking everything
 
 const Application: React.FC = () => {
   const [counter, setCounter] = useState(0);
   const [darkTheme, setDarkTheme] = useState(true);
   const [versions, setVersions] = useState<Record<string, string>>({});
+  const [filePaths, setFilePaths] = useState([]);
+  const [currentImageIndex, setCurrentImageIndex] = useState(1);
+  console.log({ filePaths });
 
   /**
    * On component mount
@@ -46,91 +60,65 @@ const Application: React.FC = () => {
     setDarkTheme(!darkTheme);
   }
 
+  const handleClickOpenFolder = useCallback(async () => {
+    try {
+      const result = await window.dialog.showOpenDialog({
+        properties: ["openDirectory"],
+      });
+      const dirPath = result.filePaths[0];
+      console.log({ dirPath });
+      console.log({ result });
+      console.log(await result);
+      const filenames = await window.fs.readdirSync(dirPath);
+      setFilePaths(
+        filenames.map((filename: string) => {
+          // compat: Test this on windows paths
+          // return new URL(`file://${dirPath}/${filename}`).href; // HACK to do path.join type behavior
+          return `local-image://${dirPath}/${filename}`;
+        }),
+      );
+      console.log({ filenames });
+      console.log({ filePaths });
+      // document.querySelector("#image-count").textContent = filePaths.length;
+    } catch (e) {
+      console.error(e);
+    }
+  }, []);
+
   return (
     <div id="erwt">
-      <div className="header">
-        <div className="main-heading">
-          <h1 className="themed">ERWT - Electron Boilerplate</h1>
-        </div>
-        <div className="main-teaser">
-          Desktop Application with Electron, React, Webpack & TypeScript
-        </div>
-        <div className="versions">
-          <div className="item">
-            <div>
-              <img className="item-icon" src={icons.electron} /> Electron
-            </div>
-            <span>{versions?.electron}</span>
+      <div className="">
+        <div className="center">
+          <button onClick={handleClickOpenFolder}>Open folder</button>
+          <span className="themed">
+            Showing image {currentImageIndex + 1}/
+            <span>{filePaths.length}</span>{" "}
+          </span>
+          <div>
+            <button onClick={() => setCurrentImageIndex((i) => i + 1)}>
+              Next
+            </button>
+            <button onClick={() => setCurrentImageIndex((i) => i - 1)}>
+              Prev
+            </button>
+            <button
+              onClick={() =>
+                setCurrentImageIndex((i) =>
+                  Math.floor(Math.random() * filePaths.length),
+                )
+              }
+            >
+              Random
+            </button>
           </div>
-          <div className="item">
-            <div>
-              <img className="item-icon" src={icons.erwt} /> ERWT
-            </div>
-            <span>{versions?.erwt}</span>
-          </div>
-          <div className="item">
-            <div>
-              <img className="item-icon" src={icons.typescript} /> Typescript
-            </div>
-            <span>{versions?.typescript}</span>
-          </div>
-          <div className="item">
-            <div>
-              <img className="item-icon" src={icons.nodejs} /> Nodejs
-            </div>
-            <span>{versions?.node}</span>
-          </div>
-          <div className="item">
-            <div>
-              <img className="item-icon" src={icons.react} /> React
-            </div>
-            <span>{versions?.react}</span>
-          </div>
-          <div className="item">
-            <div>
-              <img className="item-icon" src={icons.webpack} /> Webpack
-            </div>
-            <span>{versions?.webpack}</span>
-          </div>
-          <div className="item">
-            <div>
-              <img className="item-icon" src={icons.chrome} /> Chrome
-            </div>
-            <span>{versions?.chrome}</span>
-          </div>
-          <div className="item">
-            <div>
-              <img className="item-icon" src={icons.license} /> License
-            </div>
-            <span>{versions?.license}</span>
-          </div>
+          {filePaths[currentImageIndex] ?? ""}
         </div>
       </div>
-
-      <div className="footer">
-        <div className="center">
-          <button
-            onClick={() => {
-              if (counter > 99) return alert("Going too high!!");
-              setCounter(counter + 1);
-            }}
-          >
-            Increment {counter != 0 ? counter : ""} <span>{counter}</span>
-          </button>
-          &nbsp;&nbsp; &nbsp;&nbsp;
-          <button
-            onClick={() => {
-              if (counter == 0) return alert("Oops.. thats not possible!");
-              setCounter(counter > 0 ? counter - 1 : 0);
-            }}
-          >
-            Decrement <span>{counter}</span>
-          </button>
-          &nbsp;&nbsp; &nbsp;&nbsp;
-          <button onClick={toggleTheme}>
-            {darkTheme ? "Light Theme" : "Dark Theme"}
-          </button>
-        </div>
+      <div className="image-viewer">
+        <img
+          className="image-viewer__image"
+          src={filePaths[currentImageIndex]}
+        />
       </div>
     </div>
   );

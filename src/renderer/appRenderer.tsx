@@ -4,7 +4,7 @@ import WindowFrame from "@renderer/window/WindowFrame";
 import Application from "@components/Application";
 
 // Say something
-console.log("[ERWT] : Renderer execution started");
+console.log("[ERWT]: Renderer execution started");
 
 // Application to Render
 const app = (

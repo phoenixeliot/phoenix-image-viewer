@@ -1,5 +1,56 @@
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, Menu, MenuItem, net, protocol } from "electron";
 import { createAppWindow } from "./appWindow";
+import "./dialog/dialog";
+import "./filesystem/filesystem";
+// import "./window/menu";
+import path from "path";
+import { pathToFileURL } from "url";
+
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: "local-image",
+    privileges: {
+      standard: true,
+      secure: false,
+      supportFetchAPI: false,
+    },
+  },
+]);
+
+app.whenReady().then(() => {
+  protocol.handle("local-image", (req) => {
+    console.log("Handling local-image:", req);
+    const pathToMedia = "/" + req.url.replace("local-image://", "");
+    console.log({ pathToMedia });
+    return net.fetch(`file://${pathToMedia}`);
+
+    //     const { host, pathname } = new URL(req.url);
+    //     // if (host === "bundle") {
+    //     // NB, this checks for paths that escape the bundle, e.g.
+    //     // app://bundle/../../secret_file.txt
+    //     const pathToServe = path.resolve(__dirname, pathname);
+    //     const relativePath = path.relative(__dirname, pathToServe);
+    //     const isSafe =
+    //       relativePath &&
+    //       !relativePath.startsWith("..") &&
+    //       !path.isAbsolute(relativePath);
+    //     // if (!isSafe) {
+    //     //   return new Response("bad", {
+    //     //     status: 400,
+    //     //     headers: { "content-type": "text/html" },
+    //     //   });
+    //     // }
+    //
+    //     return net.fetch(pathToFileURL(pathToServe).toString());
+    //     // } else if (host === "api") {
+    //     //   return net.fetch("https://api.my-server.com/" + pathname, {
+    //     //     method: req.method,
+    //     //     headers: req.headers,
+    //     //     body: req.body,
+    //     //   });
+    //     // }
+  });
+});
 
 /** Handle creating/removing shortcuts on Windows when installing/uninstalling. */
 if (require("electron-squirrel-startup")) {
