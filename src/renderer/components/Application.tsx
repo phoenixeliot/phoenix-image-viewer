@@ -1,7 +1,13 @@
 // import "../../typings/index.d.ts";
 // import "../types.d.ts";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-// import "@styles/app.scss";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import "@styles/app.scss";
 import icons from "@components/icons";
 import { type ipcRenderer } from "electron";
 
@@ -23,6 +29,7 @@ const Application: React.FC = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   // console.log({ filePaths });
   const [randomImageIndex, setRandomImageIndex] = useState(0);
+  const videoRef = useRef(null);
   const numImages = filePaths.length;
 
   const fileExtensions = filePaths
@@ -163,7 +170,7 @@ const Application: React.FC = () => {
           .map((filePath) => {
             // compat: Test this on windows paths
             // return new URL(`file://${dirPath}/${filename}`).href; // HACK to do path.join type behavior
-            return `local-image://${filePath}`;
+            return `media://${filePath}`;
           }),
       );
     } catch (e) {
@@ -193,7 +200,7 @@ const Application: React.FC = () => {
           <div style={{ backgroundColor: "black" }}>{currentImagePath}</div>
         </div>
       </div>
-      <div className="-image-viewer">
+      <div className="image-viewer">
         {currentImageExtension === "webm" ? (
           <video
             className="image-viewer__image"
@@ -201,6 +208,8 @@ const Application: React.FC = () => {
             loop
             controls
             autoPlay
+            ref={videoRef}
+            onPlay={() => videoRef.current.focus()}
           />
         ) : (
           <img className="image-viewer__image" src={currentImagePath} />

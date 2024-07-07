@@ -5,11 +5,12 @@ import "./filesystem/filesystem";
 import "./window/menu";
 import path from "path";
 import { pathToFileURL } from "url";
-import fs from "fs";
+import fs, { createReadStream } from "fs";
+import { stat } from "fs/promises";
 
 protocol.registerSchemesAsPrivileged([
   {
-    scheme: "local-image",
+    scheme: "media",
     privileges: {
       standard: true,
       secure: false,
@@ -20,71 +21,78 @@ protocol.registerSchemesAsPrivileged([
 ]);
 
 app.whenReady().then(() => {
-  protocol.handle("local-image", async (req) => {
-    console.log("Handling local-image:", req);
-    const pathToMedia = "/" + req.url.replace("local-image://", "");
-    console.log({ pathToMedia });
-
-    return net.fetch(`file://${pathToMedia}`);
-
-    const mediaData = await fs.promises.readFile(pathToMedia);
-
-    const mimeTypesMap = {
-      avi: "video/x-msvideo",
-      mp4: "video/mp4",
-      mpeg: "video/mpeg",
-      ogv: "video/ogg",
-      ts: "video/mp2t",
-      webm: "video/webm",
-      "3gp": "video/3gpp;", // audio/3gpp if it doesn't contain video
-      "3g2": "video/3gpp2;", // audio/3gpp2 if it doesn't contain video
-      apng: "image/apng",
-      avif: "image/avif",
-      bmp: "image/bmp",
-      gif: "image/gif",
-      ico: "image/vnd.microsoft.icon",
-      jpeg: "image/jpeg",
-      jpg: "image/jpeg",
-      png: "image/png",
-      svg: "image/svg+xml",
-      tif: "image/tiff",
-      tiff: "image/tiff",
-      webp: "image/webp",
-    };
-
-    const extension = pathToMedia
-      .split(".")
-      .at(-1) as keyof typeof mimeTypesMap;
-
-    const mimeType = mimeTypesMap[extension];
-    return new Response(mediaData, { headers: { "Content-Type": mimeType } });
-
-    //     const { host, pathname } = new URL(req.url);
-    //     // if (host === "bundle") {
-    //     // NB, this checks for paths that escape the bundle, e.g.
-    //     // app://bundle/../../secret_file.txt
-    //     const pathToServe = path.resolve(__dirname, pathname);
-    //     const relativePath = path.relative(__dirname, pathToServe);
-    //     const isSafe =
-    //       relativePath &&
-    //       !relativePath.startsWith("..") &&
-    //       !path.isAbsolute(relativePath);
-    //     // if (!isSafe) {
-    //     //   return new Response("bad", {
-    //     //     status: 400,
-    //     //     headers: { "content-type": "text/html" },
-    //     //   });
-    //     // }
-    //
-    //     return net.fetch(pathToFileURL(pathToServe).toString());
-    //     // } else if (host === "api") {
-    //     //   return net.fetch("https://api.my-server.com/" + pathname, {
-    //     //     method: req.method,
-    //     //     headers: req.headers,
-    //     //     body: req.body,
-    //     //   });
-    //     // }
+  // This works for seeking where protocol.handle does not. See https://github.com/electron/electron/issues/38749
+  protocol.registerFileProtocol("media", (req, callback) => {
+    const pathToMedia = decodeURI("/" + req.url.replace("media://", ""));
+    // console.log({ pathToMedia });
+    callback(pathToMedia); // simplified path for this example
   });
+
+  //   protocol.handle("media", async (req) => {
+  //     console.log("Handling media:", req);
+  //     const pathToMedia = "/" + req.url.replace("media://", "");
+  //     console.log({ pathToMedia });
+  //
+  //     return net.fetch(`file://${pathToMedia}`);
+  //
+  //     const mediaData = await fs.promises.readFile(pathToMedia);
+  //
+  //     const mimeTypesMap = {
+  //       avi: "video/x-msvideo",
+  //       mp4: "video/mp4",
+  //       mpeg: "video/mpeg",
+  //       ogv: "video/ogg",
+  //       ts: "video/mp2t",
+  //       webm: "video/webm",
+  //       "3gp": "video/3gpp;", // audio/3gpp if it doesn't contain video
+  //       "3g2": "video/3gpp2;", // audio/3gpp2 if it doesn't contain video
+  //       apng: "image/apng",
+  //       avif: "image/avif",
+  //       bmp: "image/bmp",
+  //       gif: "image/gif",
+  //       ico: "image/vnd.microsoft.icon",
+  //       jpeg: "image/jpeg",
+  //       jpg: "image/jpeg",
+  //       png: "image/png",
+  //       svg: "image/svg+xml",
+  //       tif: "image/tiff",
+  //       tiff: "image/tiff",
+  //       webp: "image/webp",
+  //     };
+  //
+  //     const extension = pathToMedia
+  //       .split(".")
+  //       .at(-1) as keyof typeof mimeTypesMap;
+  //
+  //     const mimeType = mimeTypesMap[extension];
+  //     return new Response(mediaData, { headers: { "Content-Type": mimeType } });
+  //
+  //     //     const { host, pathname } = new URL(req.url);
+  //     //     // if (host === "bundle") {
+  //     //     // NB, this checks for paths that escape the bundle, e.g.
+  //     //     // app://bundle/../../secret_file.txt
+  //     //     const pathToServe = path.resolve(__dirname, pathname);
+  //     //     const relativePath = path.relative(__dirname, pathToServe);
+  //     //     const isSafe =
+  //     //       relativePath &&
+  //     //       !relativePath.startsWith("..") &&
+  //     //       !path.isAbsolute(relativePath);
+  //     //     // if (!isSafe) {
+  //     //     //   return new Response("bad", {
+  //     //     //     status: 400,
+  //     //     //     headers: { "content-type": "text/html" },
+  //     //     //   });
+  //     //     // }
+  //     //
+  //     //     return net.fetch(pathToFileURL(pathToServe).toString());
+  //     //     // } else if (host === "api") {
+  //     //     //   return net.fetch("https://api.my-server.com/" + pathname, {
+  //     //     //     method: req.method,
+  //     //     //     headers: req.headers,
+  //     //     //     body: req.body,
+  //     //     //   });
+  //     //     // }
+  //   });
 });
 
 /** Handle creating/removing shortcuts on Windows when installing/uninstalling. */
