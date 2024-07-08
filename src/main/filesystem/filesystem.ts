@@ -2,29 +2,53 @@ import { Dirent, readdirSync } from "fs";
 import path from "path";
 
 export function getImagePaths(dirPath: string, { recursive = false } = {}) {
-  const result = getImageMetas(dirPath, { recursive }).map((item) =>
-    path.join(item.path, item.name),
+  const result = getImageDirents(dirPath, { recursive }).map((item) =>
+    path.join(item.parentPath, item.name),
   );
-  console.log({ result });
   return result;
 }
 
-export function getImageMetas(dirPath: string, { recursive = false } = {}) {
+export function getImageDirents(dirPath: string, { recursive = false } = {}) {
   const items = readdirSync(dirPath, {
     recursive: false, // Otherwise we try to read some macOS folder and it fails, so we do it manually
     withFileTypes: true,
   }).filter((item) => !item.name.startsWith("."));
-  Dirent;
   const result: typeof items = [];
   for (const item of items) {
     if (item.isFile()) {
       result.push(item);
     } else if (item.isDirectory()) {
-      result.push(...getImageMetas(path.join(item.parentPath, item.name)));
+      result.push(...getImageDirents(path.join(item.parentPath, item.name)));
     } else {
       console.error("Item is somehow neither file nor directory: ", item);
       throw Error;
     }
   }
-  return result;
+  return result.filter((fileMeta) => {
+    return supportedFileExtensions.includes(fileMeta.name.split(".").at(-1));
+  });
 }
+
+// The other ones in this list seem to just not work at all.
+const supportedFileExtensions = [
+  // "avi", // Seems not to actually work, despite being in the MDN list.
+  // "mpeg",
+  "mp4",
+  "3g2",
+  // "3gp",
+  "apng",
+  "avif",
+  "bmp",
+  "gif",
+  "ico",
+  "jpeg",
+  "jpg",
+  "png",
+  "svg",
+  // "tif",
+  // "tiff",
+  // "ts",
+  "webm",
+  "webp",
+  "ogv",
+];

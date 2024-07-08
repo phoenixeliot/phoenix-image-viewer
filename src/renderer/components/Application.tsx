@@ -8,6 +8,7 @@ import React, {
   useState,
 } from "react";
 
+// TODO: Figure out how to put this in a .d.ts file without it breaking everything when I import it
 declare global {
   interface Window {
     dialog: any;
@@ -16,31 +17,56 @@ declare global {
   }
 }
 
-// TODO: Figure out how to put this in a .d.ts file without it breaking everything
-
 const Application: React.FC = () => {
   const [counter, setCounter] = useState(0);
   const [darkTheme, setDarkTheme] = useState(true);
   const [versions, setVersions] = useState<Record<string, string>>({});
-  const [filePaths, setFilePaths] = useState<string[]>([]);
+  const [fileMetas, setFileMetas] = useState<FileMeta[]>([]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   // console.log({ filePaths });
   const [randomImageIndex, setRandomImageIndex] = useState(0);
-  const [filterByWebm, setFilterByWebm] = useState(false);
   const [fileExtensionFilter, setFileExtensionFilter] = useState("");
+  const [sortOrder, setSortOrder] = useState("name");
   const videoRef = useRef(null);
 
-  const filteredFilePaths = useMemo(() => {
-    return filePaths.filter((filePath) => {
-      const filename = filePath.split("/").at(-1);
+  const filePaths = useMemo(
+    () => fileMetas.map((fileMeta) => fileMeta.filePath),
+    [fileMetas],
+  );
+
+  const sortedFileMetas = useMemo(
+    () =>
+      fileMetas.toSorted((a, b) => {
+        if (sortOrder === "last-modified") {
+          const aDate = a.lastModified.getTime();
+          const bDate = b.lastModified.getTime();
+          // console.log({ a, b, aDate, bDate });
+          return aDate > bDate ? -1 : aDate < bDate ? 1 : 0;
+          // TODO: File size
+        } else {
+          // Name is the default
+          return a.filePath
+            .split("/")
+            .at(-1)
+            .localeCompare(b.filePath.split("/").at(-1));
+        }
+      }),
+    [fileMetas, sortOrder],
+  );
+
+  console.log({ fileMetas, sortedFileMetas });
+
+  const filteredFileMetas = useMemo(() => {
+    return sortedFileMetas.filter((fileMeta) => {
+      const filename = fileMeta.filePath.split("/").at(-1);
       const extension = filename.split(".").at(-1).toLowerCase();
       if (fileExtensionFilter) {
         if (extension != fileExtensionFilter) return false;
       }
       return true;
     });
-  }, [fileExtensionFilter, filePaths]);
-  const numImages = filteredFilePaths.length;
+  }, [fileExtensionFilter, sortedFileMetas]);
+  const numImages = filteredFileMetas.length;
 
   // console.log({ filteredFilePaths });
 
@@ -61,11 +87,11 @@ const Application: React.FC = () => {
 
   const randomIndexMap = useMemo(() => {
     const unshuffled = [];
-    for (let i = 0; i < filteredFilePaths.length; i++) {
+    for (let i = 0; i < filteredFileMetas.length; i++) {
       unshuffled.push(i);
     }
     const shuffled = [];
-    for (let i = 0; i < filteredFilePaths.length; i++) {
+    for (let i = 0; i < filteredFileMetas.length; i++) {
       const item = unshuffled.splice(
         Math.floor(Math.random() * unshuffled.length),
         1,
@@ -73,7 +99,7 @@ const Application: React.FC = () => {
       shuffled.push(...item);
     }
     return shuffled;
-  }, [filteredFilePaths.length]);
+  }, [filteredFileMetas.length]);
 
   const reverseRandomIndexMap = useMemo(() => {
     const reverseMap: number[] = [];
@@ -117,8 +143,8 @@ const Application: React.FC = () => {
   }, [numImages, randomImageIndex, reverseRandomIndexMap]);
 
   const openFiles = useCallback(
-    (event: IpcRendererEvent, filePaths: string[]) => {
-      setFilePaths(filePaths);
+    (event: IpcRendererEvent, fileMetas: FileMeta[]) => {
+      setFileMetas(fileMetas);
     },
     [],
   );
@@ -130,6 +156,10 @@ const Application: React.FC = () => {
       ["go-to-next-image", goToNextImage],
       ["go-to-prev-image", goToPrevImage],
       ["open-files", openFiles],
+      [
+        "set-sort-order",
+        (event: IpcRendererEvent, order: string) => setSortOrder(order),
+      ],
     ] as const;
     for (const [event, callback] of events) {
       window.ipcRenderer.on(event, callback);
@@ -192,7 +222,7 @@ const Application: React.FC = () => {
     setDarkTheme(!darkTheme);
   }
 
-  const currentImagePath = filteredFilePaths[currentImageIndex];
+  const currentImagePath = filteredFileMetas[currentImageIndex]?.filePath;
   const currentImageExtension = currentImagePath?.split(".").at(-1);
   const currentImageUrl = `media://${currentImagePath}`;
 
@@ -206,13 +236,6 @@ const Application: React.FC = () => {
     <div id="erwt">
       <div className="">
         <div className="center">
-          <label>
-            <input
-              type="checkbox"
-              onChange={(e) => setFilterByWebm(e.target.checked)}
-            />
-            Only webm
-          </label>
           <select onChange={(e) => setFileExtensionFilter(e.target.value)}>
             <option key={"None"} value={""}>
               No filter
@@ -225,7 +248,7 @@ const Application: React.FC = () => {
           </select>
           <span className="themed" style={{ backgroundColor: "black" }}>
             Showing image {currentImageIndex + 1}/
-            <span>{filteredFilePaths.length}</span>{" "}
+            <span>{filteredFileMetas.length}</span>{" "}
           </span>
           <div style={{ backgroundColor: "black" }}>{currentImagePath}</div>
         </div>
@@ -251,5 +274,11 @@ const Application: React.FC = () => {
 
 // https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
 const videoFormats = ["avi", "mp4", "mpeg", "ogv", "ts", "webm", "3gp", "3g2"];
+
+type FileMeta = {
+  filePath: string;
+  lastModified: Date;
+  // size: number;
+};
 
 export default Application;

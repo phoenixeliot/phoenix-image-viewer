@@ -17,14 +17,18 @@ menuTemplate.splice(1, 0, {
           properties: ["openDirectory"],
         });
         const firstFilePath = openResult.filePaths[0];
-        const filePaths = (
-          fs.statSync(firstFilePath).isDirectory()
-            ? await getImagePaths(firstFilePath)
-            : openResult.filePaths
-        ).filter((filePath) => {
-          return supportedFileExtensions.includes(filePath.split(".").at(-1));
-        });
-        browserWindow.webContents.send("open-files", filePaths);
+        const filePaths = await getImagePaths(firstFilePath);
+        const fileMetas = await Promise.all(
+          filePaths.map(async (filePath) => {
+            const stat = await fs.promises.stat(filePath);
+            return {
+              filePath,
+              lastModified: stat.mtime,
+              size: stat.size,
+            };
+          }),
+        );
+        browserWindow.webContents.send("open-files", fileMetas);
       },
     },
     {
@@ -61,6 +65,9 @@ menuTemplate.splice(3, 0, {
       },
     },
     {
+      type: "separator",
+    },
+    {
       accelerator: "R",
       label: "Next Random Image",
       click: (menuItem, browserWindow, modifiers) => {
@@ -76,33 +83,36 @@ menuTemplate.splice(3, 0, {
         browserWindow.webContents.send("go-to-prev-random-image");
       },
     },
+    {
+      type: "separator",
+    },
+    {
+      label: "Order by Name",
+      type: "radio",
+      click: (menuItem, browserWindow, modifiers) => {
+        console.log(menuItem.label);
+        browserWindow.webContents.send("set-sort-order", "name");
+      },
+    },
+    {
+      label: "Order by Modification date",
+      type: "radio",
+      click: (menuItem, browserWindow, modifiers) => {
+        console.log(menuItem.label);
+        browserWindow.webContents.send("set-sort-order", "last-modified");
+      },
+    },
+    // {
+    //   label: "Order by File Size",
+    //   type: "radio",
+    //   click: (menuItem, browserWindow, modifiers) => {
+    //     console.log(menuItem.label);
+    //     browserWindow.webContents.send("set-sort-order", "file-size");
+    //   },
+    // },
   ],
 });
 const menu = Menu.buildFromTemplate(menuTemplate);
-
-// The other ones in this list seem to just not work at all.
-const supportedFileExtensions = [
-  // "avi", // Seems not to actually work, despite being in the MDN list.
-  // "mpeg",
-  "mp4",
-  "3g2",
-  // "3gp",
-  "apng",
-  "avif",
-  "bmp",
-  "gif",
-  "ico",
-  "jpeg",
-  "jpg",
-  "png",
-  "svg",
-  // "tif",
-  // "tiff",
-  // "ts",
-  "webm",
-  "webp",
-  "ogv",
-];
 
 // console.dir({ defaultMenu: menuTemplate, menu }, { depth: null });
 
