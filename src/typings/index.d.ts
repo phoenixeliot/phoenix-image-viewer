@@ -14,13 +14,13 @@ declare module "*.jpeg";
 //     };
 //   }
 // }
-
-declare global {
-  interface Window {
-    dialog: any;
-    fs: any;
-  }
-}
-
-declare const window: typeof global.Window;
-declare const dialog: any;
+//
+// declare global {
+//   interface Window {
+//     dialog: any;
+//     fs: any;
+//   }
+// }
+//
+// declare const window: typeof global.Window;
+// declare const dialog: any;

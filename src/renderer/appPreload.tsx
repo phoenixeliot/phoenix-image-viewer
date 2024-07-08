@@ -12,14 +12,10 @@ contextBridge.exposeInMainWorld("versions", {
 });
 
 const { dialog, ipcRenderer } = require("electron");
-console.log({ dialog });
-contextBridge.exposeInMainWorld("dialog", {
-  showOpenDialog: () => ipcRenderer.invoke("dialog.showOpenDialog"),
-});
-contextBridge.exposeInMainWorld("fs", {
-  getImagePaths: (dirPath: string, options = {}) =>
-    ipcRenderer.invoke("getImagePaths", dirPath, options),
-});
+// console.log({ dialog });
+// contextBridge.exposeInMainWorld("dialog", {
+//   showOpenDialog: () => ipcRenderer.invoke("dialog.showOpenDialog"),
+// });
 
 // Expose IPC methods
 contextBridge.exposeInMainWorld("ipcRenderer", {

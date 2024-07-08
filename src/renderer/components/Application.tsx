@@ -1,5 +1,5 @@
 import "@styles/app.scss";
-import { type ipcRenderer } from "electron";
+import { type ipcRenderer, type IpcRendererEvent } from "electron";
 import React, {
   useCallback,
   useEffect,
@@ -41,7 +41,7 @@ const Application: React.FC = () => {
   }, [filePaths, filterByWebm]);
   const numImages = filteredFilePaths.length;
 
-  console.log({ filteredFilePaths });
+  // console.log({ filteredFilePaths });
 
   const fileExtensions = filePaths
     .filter((path) => path.includes("."))
@@ -53,6 +53,8 @@ const Application: React.FC = () => {
       set.add(extension);
       return set;
     }, new Set());
+
+  // console.dir({ fileExtensions });
 
   const randomIndexMap = useMemo(() => {
     const unshuffled = [];
@@ -111,12 +113,20 @@ const Application: React.FC = () => {
     setCurrentImageIndex(newImageIndex);
   }, [numImages, randomImageIndex, reverseRandomIndexMap]);
 
+  const openFiles = useCallback(
+    (event: IpcRendererEvent, filePaths: string[]) => {
+      setFilePaths(filePaths);
+    },
+    [],
+  );
+
   useEffect(() => {
     const events = [
       ["go-to-next-random-image", goToNextRandomImage],
       ["go-to-prev-random-image", goToPrevRandomImage],
       ["go-to-next-image", goToNextImage],
       ["go-to-prev-image", goToPrevImage],
+      ["open-files", openFiles],
     ] as const;
     for (const [event, callback] of events) {
       window.ipcRenderer.on(event, callback);
