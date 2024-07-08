@@ -9,6 +9,34 @@ menuTemplate.splice(1, 0, {
   label: "File",
   submenu: [
     {
+      accelerator: "Command+O", // TODO: Add windows shortcut
+      label: "Open...",
+      click: async (menuItem, browserWindow, modifiers) => {
+        console.log(menuItem.label);
+        const openResult = await dialog.showOpenDialog({
+          properties: ["openDirectory"],
+        });
+        const firstFilePath = openResult.filePaths[0];
+        const filePaths = (
+          fs.statSync(firstFilePath).isDirectory()
+            ? await getImagePaths(firstFilePath)
+            : openResult.filePaths
+        ).filter((filePath) => {
+          return supportedFileExtensions.includes(filePath.split(".").at(-1));
+        });
+        const filePathsWithProtocol = filePaths.map(
+          (path) => `media://${path}`,
+        );
+        console.dir({ filenames: filePaths });
+        browserWindow.webContents.send("open-files", filePathsWithProtocol);
+      },
+    },
+  ],
+});
+menuTemplate.splice(3, 0, {
+  label: "Browse",
+  submenu: [
+    {
       accelerator: ".",
       label: "Next Image",
       click: (menuItem, browserWindow, modifiers) => {
@@ -38,29 +66,6 @@ menuTemplate.splice(1, 0, {
       click: (menuItem, browserWindow, modifiers) => {
         console.log(menuItem.label);
         browserWindow.webContents.send("go-to-prev-random-image");
-      },
-    },
-    {
-      accelerator: "Command+O", // TODO: Add windows shortcut
-      label: "Open...",
-      click: async (menuItem, browserWindow, modifiers) => {
-        console.log(menuItem.label);
-        const openResult = await dialog.showOpenDialog({
-          properties: ["openDirectory"],
-        });
-        const firstFilePath = openResult.filePaths[0];
-        const filePaths = (
-          fs.statSync(firstFilePath).isDirectory()
-            ? await getImagePaths(firstFilePath)
-            : openResult.filePaths
-        ).filter((filePath) => {
-          return supportedFileExtensions.includes(filePath.split(".").at(-1));
-        });
-        const filePathsWithProtocol = filePaths.map(
-          (path) => `media://${path}`,
-        );
-        console.dir({ filenames: filePaths });
-        browserWindow.webContents.send("open-files", filePathsWithProtocol);
       },
     },
   ],
