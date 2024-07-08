@@ -192,26 +192,6 @@ const Application: React.FC = () => {
     setDarkTheme(!darkTheme);
   }
 
-  const handleClickOpenFolder = useCallback(async () => {
-    try {
-      const result = await window.dialog.showOpenDialog({
-        properties: ["openDirectory"],
-      });
-      const dirPath = result.filePaths[0];
-      const filenames: string[] = await window.fs.getImagePaths(dirPath);
-      console.dir({ filenames });
-      setFilePaths(
-        filenames.map((filePath) => {
-          // compat: Test this on windows paths
-          // return new URL(`file://${dirPath}/${filename}`).href; // HACK to do path.join type behavior
-          return `media://${filePath}`;
-        }),
-      );
-    } catch (e) {
-      console.error(e);
-    }
-  }, []);
-
   const currentImagePath = filteredFilePaths[currentImageIndex];
   const currentImageExtension = currentImagePath?.split(".").at(-1);
   const currentImageUrl = `media://${currentImagePath}`;
@@ -226,7 +206,6 @@ const Application: React.FC = () => {
     <div id="erwt">
       <div className="">
         <div className="center">
-          <button onClick={handleClickOpenFolder}>Open folder</button>
           <label>
             <input
               type="checkbox"
