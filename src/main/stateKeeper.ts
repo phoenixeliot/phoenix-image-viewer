@@ -1,8 +1,8 @@
-import { screen } from "electron";
+import { BrowserWindow, screen } from "electron";
 import settings from "electron-settings";
 
-export const windowStateKeeper = async (windowName) => {
-  let window, windowState;
+export const windowStateKeeper = async (windowName: string) => {
+  let window: BrowserWindow, windowState: any, browseState: any;
 
   const setBounds = async () => {
     // Restore from appConfig
@@ -31,10 +31,16 @@ export const windowStateKeeper = async (windowName) => {
     await settings.set(`windowState.${windowName}`, windowState);
   };
 
-  const track = async (win) => {
-    window = win;
-    ["resize", "move", "close"].forEach((event) => {
-      win.on(event, saveState);
+  const setBrowseState = async (state: any) => {
+    console.log("setBrowseState to", state);
+    browseState = state;
+    settings.set(`browseState.${windowName}`, state);
+  };
+
+  const track = async (newWindow: BrowserWindow) => {
+    window = newWindow;
+    ["resize", "move", "close"].forEach((event: any) => {
+      window.on(event, saveState);
     });
   };
 
@@ -47,5 +53,7 @@ export const windowStateKeeper = async (windowName) => {
     height: windowState.height,
     isMaximized: windowState.isMaximized,
     track,
+    browseState,
+    setBrowseState,
   };
 };

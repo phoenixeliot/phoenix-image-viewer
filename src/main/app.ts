@@ -1,12 +1,8 @@
-import { app, BrowserWindow, Menu, MenuItem, net, protocol } from "electron";
+import { app, BrowserWindow, protocol } from "electron";
 import { createAppWindow } from "./appWindow";
 import "./dialog/dialog";
 import "./filesystem/filesystem";
 import "./window/menu";
-import path from "path";
-import { pathToFileURL } from "url";
-import fs, { createReadStream } from "fs";
-import { stat } from "fs/promises";
 
 protocol.registerSchemesAsPrivileged([
   {

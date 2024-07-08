@@ -46,7 +46,7 @@ const Application: React.FC = () => {
 
   const fileExtensions = Array.from(
     filePaths
-      .filter((path) => path.includes("."))
+      .filter((filePath) => filePath.includes("."))
       .map((filePath) => {
         const extension = filePath.split(".").at(-1).toLowerCase();
         return extension;
@@ -139,7 +139,13 @@ const Application: React.FC = () => {
         window.ipcRenderer.off(event, callback);
       }
     };
-  });
+  }, [
+    goToNextImage,
+    goToNextRandomImage,
+    goToPrevImage,
+    goToPrevRandomImage,
+    openFiles,
+  ]);
 
   // images: 0 1 2 3 4
   // randomized: 2 4 1 0 3
@@ -208,6 +214,14 @@ const Application: React.FC = () => {
 
   const currentImagePath = filteredFilePaths[currentImageIndex];
   const currentImageExtension = currentImagePath?.split(".").at(-1);
+  const currentImageUrl = `media://${currentImagePath}`;
+
+  useEffect(() => {
+    window.ipcRenderer.invoke("setBrowseState", {
+      currentImagePath,
+    });
+  }, [currentImagePath]);
+
   return (
     <div id="erwt">
       <div className="">
@@ -241,7 +255,7 @@ const Application: React.FC = () => {
         {videoFormats.includes(currentImageExtension) ? (
           <video
             className="image-viewer__image"
-            src={currentImagePath}
+            src={currentImageUrl}
             loop
             controls
             autoPlay
@@ -249,7 +263,7 @@ const Application: React.FC = () => {
             onPlay={() => videoRef.current.focus()}
           />
         ) : (
-          <img className="image-viewer__image" src={currentImagePath} />
+          <img className="image-viewer__image" src={currentImageUrl} />
         )}
       </div>
     </div>

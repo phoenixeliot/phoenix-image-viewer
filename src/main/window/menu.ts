@@ -1,10 +1,10 @@
 import { Menu, app, dialog, shell } from "electron";
 import getDefaultMenuTemplate from "electron-default-menu";
+import settings from "electron-settings";
 import fs from "fs";
 import { getImagePaths } from "../filesystem/filesystem";
 
 const menuTemplate = getDefaultMenuTemplate(app, shell);
-// const menu = new Menu();
 menuTemplate.splice(1, 0, {
   label: "File",
   submenu: [
@@ -24,11 +24,19 @@ menuTemplate.splice(1, 0, {
         ).filter((filePath) => {
           return supportedFileExtensions.includes(filePath.split(".").at(-1));
         });
-        const filePathsWithProtocol = filePaths.map(
-          (path) => `media://${path}`,
-        );
-        console.dir({ filenames: filePaths });
-        browserWindow.webContents.send("open-files", filePathsWithProtocol);
+        browserWindow.webContents.send("open-files", filePaths);
+      },
+    },
+    {
+      accelerator: "Command+Option+R", // TODO: Add windows shortcut
+      label: "Reveal in Finder", // TODO: Localize windows text
+      click: async (menuItem, browserWindow, modifiers) => {
+        const windowName = "main"; // TODO: Make dynamic for multiple windows
+        const browseState = (await settings.get(
+          `browseState.${windowName}`,
+        )) as any;
+        const filePath = browseState["currentImagePath"] as string;
+        shell.showItemInFolder(filePath);
       },
     },
   ],

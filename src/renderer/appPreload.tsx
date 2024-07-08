@@ -26,6 +26,10 @@ contextBridge.exposeInMainWorld("ipcRenderer", {
   off: (name: string, callback: any) => {
     ipcRenderer.off(name, callback);
   },
+  invoke: (name: string, ...args: any[]) => {
+    console.log("invoke", name);
+    ipcRenderer.invoke(name, ...args);
+  },
 });
 
 // Get versions

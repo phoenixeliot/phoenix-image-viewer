@@ -1,6 +1,7 @@
 import { app, BrowserWindow } from "electron";
 import path from "path";
 import { registerTitlebarIpc } from "@main/window/titlebarIpc";
+import { registerBrowseStateIpc } from "@main/browseState/browseStateIpc";
 import { windowStateKeeper } from "@main/stateKeeper";
 
 // Electron Forge automatically creates these entry points
@@ -63,16 +64,17 @@ export async function createAppWindow(): Promise<BrowserWindow> {
   //   console.log("Go to random image!");
   // });
 
-  return appWindow;
-}
-
-/**
- * Register Inter Process Communication
- */
-function registerMainIPC() {
   /**
-   * Here you can assign IPC related codes for the application window
-   * to Communicate asynchronously from the main process to renderer processes.
+   * Register Inter Process Communication
    */
-  registerTitlebarIpc(appWindow);
+  function registerMainIPC() {
+    /**
+     * Here you can assign IPC related codes for the application window
+     * to Communicate asynchronously from the main process to renderer processes.
+     */
+    registerTitlebarIpc(appWindow);
+    registerBrowseStateIpc(mainWindowStateKeeper.setBrowseState);
+  }
+
+  return appWindow;
 }
