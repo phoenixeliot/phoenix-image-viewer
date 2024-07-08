@@ -29,8 +29,22 @@ const Application: React.FC = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   // console.log({ filePaths });
   const [randomImageIndex, setRandomImageIndex] = useState(0);
+  const [filterByWebm, setFilterByWebm] = useState(false);
   const videoRef = useRef(null);
-  const numImages = filePaths.length;
+
+  const filteredFilePaths = useMemo(() => {
+    return filePaths.filter((filePath) => {
+      const filename = filePath.split("/").at(-1);
+      const extension = filename.split(".").at(-1);
+      if (filterByWebm) {
+        if (extension != "webm") return false;
+      }
+      return true;
+    });
+  }, [filePaths, filterByWebm]);
+  const numImages = filteredFilePaths.length;
+
+  console.log({ filteredFilePaths });
 
   const fileExtensions = filePaths
     .filter((path) => path.includes("."))
@@ -45,11 +59,11 @@ const Application: React.FC = () => {
 
   const randomIndexMap = useMemo(() => {
     const unshuffled = [];
-    for (let i = 0; i < filePaths.length; i++) {
+    for (let i = 0; i < filteredFilePaths.length; i++) {
       unshuffled.push(i);
     }
     const shuffled = [];
-    for (let i = 0; i < filePaths.length; i++) {
+    for (let i = 0; i < filteredFilePaths.length; i++) {
       const item = unshuffled.splice(
         Math.floor(Math.random() * unshuffled.length),
         1,
@@ -57,7 +71,7 @@ const Application: React.FC = () => {
       shuffled.push(...item);
     }
     return shuffled;
-  }, [filePaths.length]);
+  }, [filteredFilePaths.length]);
 
   const reverseRandomIndexMap = useMemo(() => {
     const reverseMap: number[] = [];
@@ -159,35 +173,34 @@ const Application: React.FC = () => {
       const filenames: string[] = await window.fs.getImagePaths(dirPath);
       console.dir({ filenames });
       setFilePaths(
-        filenames
-          .filter((filePath) => {
-            const filename = filePath.split("/").at(-1);
-            const extension = filename.split(".").at(-1);
-            // if (filename === ".DS_Store") return false;
-            // if (extension != "webm") return false;
-            return true;
-          })
-          .map((filePath) => {
-            // compat: Test this on windows paths
-            // return new URL(`file://${dirPath}/${filename}`).href; // HACK to do path.join type behavior
-            return `media://${filePath}`;
-          }),
+        filenames.map((filePath) => {
+          // compat: Test this on windows paths
+          // return new URL(`file://${dirPath}/${filename}`).href; // HACK to do path.join type behavior
+          return `media://${filePath}`;
+        }),
       );
     } catch (e) {
       console.error(e);
     }
   }, []);
 
-  const currentImagePath = filePaths[currentImageIndex];
+  const currentImagePath = filteredFilePaths[currentImageIndex];
   const currentImageExtension = currentImagePath?.split(".").at(-1);
   return (
     <div id="erwt">
       <div className="">
         <div className="center">
           <button onClick={handleClickOpenFolder}>Open folder</button>
+          <label>
+            <input
+              type="checkbox"
+              onChange={(e) => setFilterByWebm(e.target.checked)}
+            />
+            Only webm
+          </label>
           <span className="themed" style={{ backgroundColor: "black" }}>
             Showing image {currentImageIndex + 1}/
-            <span>{filePaths.length}</span>{" "}
+            <span>{filteredFilePaths.length}</span>{" "}
           </span>
           <div>
             <button onClick={() => setCurrentImageIndex((i) => i + 1)}>
