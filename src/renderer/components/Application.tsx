@@ -1,5 +1,5 @@
-// import "../../typings/index.d.ts";
-// import "../types.d.ts";
+import "@styles/app.scss";
+import { type ipcRenderer } from "electron";
 import React, {
   useCallback,
   useEffect,
@@ -7,9 +7,6 @@ import React, {
   useRef,
   useState,
 } from "react";
-import "@styles/app.scss";
-import icons from "@components/icons";
-import { type ipcRenderer } from "electron";
 
 declare global {
   interface Window {
@@ -81,26 +78,36 @@ const Application: React.FC = () => {
     return reverseMap;
   }, [randomIndexMap]);
 
+  const goToNextImage = useCallback(() => {
+    if (numImages === 0) return;
+    const newImageIndex = (currentImageIndex + 1) % numImages;
+    const newRandomImageIndex = randomIndexMap[newImageIndex];
+    setRandomImageIndex(newRandomImageIndex);
+    setCurrentImageIndex(newImageIndex);
+  }, [currentImageIndex, numImages, randomIndexMap]);
+
+  const goToPrevImage = useCallback(() => {
+    if (numImages === 0) return;
+    const newImageIndex = (currentImageIndex + numImages - 1) % numImages;
+    const newRandomImageIndex = randomIndexMap[newImageIndex];
+    setRandomImageIndex(newRandomImageIndex);
+    setCurrentImageIndex(newImageIndex);
+  }, [currentImageIndex, numImages, randomIndexMap]);
+
   const goToNextRandomImage = useCallback(() => {
     if (numImages === 0) return;
     console.log("Going to next random image");
-    const newRandomIndex = (randomImageIndex + 1) % numImages;
-    const newImageIndex = reverseRandomIndexMap[newRandomIndex];
-    setRandomImageIndex(newRandomIndex);
+    const newRandomImageIndex = (randomImageIndex + 1) % numImages;
+    const newImageIndex = reverseRandomIndexMap[newRandomImageIndex];
+    setRandomImageIndex(newRandomImageIndex);
     setCurrentImageIndex(newImageIndex);
-    console.log({
-      currentImageIndex,
-      newImageIndex,
-      randomImageIndex,
-      newRandomIndex,
-    });
-  }, [currentImageIndex, numImages, randomImageIndex, reverseRandomIndexMap]);
+  }, [numImages, randomImageIndex, reverseRandomIndexMap]);
 
   const goToPrevRandomImage = useCallback(() => {
     if (numImages === 0) return;
-    const newRandomIndex = (randomImageIndex + numImages - 1) % numImages;
-    const newImageIndex = reverseRandomIndexMap[newRandomIndex];
-    setRandomImageIndex(newRandomIndex);
+    const newRandomImageIndex = (randomImageIndex + numImages - 1) % numImages;
+    const newImageIndex = reverseRandomIndexMap[newRandomImageIndex];
+    setRandomImageIndex(newRandomImageIndex);
     setCurrentImageIndex(newImageIndex);
   }, [numImages, randomImageIndex, reverseRandomIndexMap]);
 
@@ -108,6 +115,8 @@ const Application: React.FC = () => {
     const events = [
       ["go-to-next-random-image", goToNextRandomImage],
       ["go-to-prev-random-image", goToPrevRandomImage],
+      ["go-to-next-image", goToNextImage],
+      ["go-to-prev-image", goToPrevImage],
     ] as const;
     for (const [event, callback] of events) {
       window.ipcRenderer.on(event, callback);
@@ -202,14 +211,6 @@ const Application: React.FC = () => {
             Showing image {currentImageIndex + 1}/
             <span>{filteredFilePaths.length}</span>{" "}
           </span>
-          <div>
-            <button onClick={() => setCurrentImageIndex((i) => i + 1)}>
-              Next
-            </button>
-            <button onClick={() => setCurrentImageIndex((i) => i - 1)}>
-              Prev
-            </button>
-          </div>
           <div style={{ backgroundColor: "black" }}>{currentImagePath}</div>
         </div>
       </div>

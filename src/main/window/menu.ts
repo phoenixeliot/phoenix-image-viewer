@@ -1,12 +1,4 @@
-import {
-  Menu,
-  MenuItem,
-  app,
-  ipcMain,
-  ipcRenderer,
-  shell,
-  webContents,
-} from "electron";
+import { Menu, app, shell } from "electron";
 import getDefaultMenuTemplate from "electron-default-menu";
 
 const menuTemplate = getDefaultMenuTemplate(app, shell);
@@ -15,18 +7,34 @@ menuTemplate.splice(1, 0, {
   label: "File",
   submenu: [
     {
-      accelerator: "R",
-      label: "Next random image",
+      accelerator: ".",
+      label: "Next Image",
       click: (menuItem, browserWindow, modifiers) => {
-        // console.log(menuItem, browserWindow, modifiers);
+        console.log(menuItem.label);
+        browserWindow.webContents.send("go-to-next-image");
+      },
+    },
+    {
+      accelerator: ",",
+      label: "Previous Image",
+      click: (menuItem, browserWindow, modifiers) => {
+        console.log(menuItem.label);
+        browserWindow.webContents.send("go-to-prev-image");
+      },
+    },
+    {
+      accelerator: "R",
+      label: "Next Random Image",
+      click: (menuItem, browserWindow, modifiers) => {
+        console.log(menuItem.label);
         browserWindow.webContents.send("go-to-next-random-image");
       },
     },
     {
       accelerator: "Shift+R",
-      label: "Previous random image",
+      label: "Previous Random Image",
       click: (menuItem, browserWindow, modifiers) => {
-        // console.log(menuItem, browserWindow, modifiers);
+        console.log(menuItem.label);
         browserWindow.webContents.send("go-to-prev-random-image");
       },
     },
