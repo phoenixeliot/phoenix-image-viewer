@@ -49,9 +49,13 @@ menuTemplate.splice(1, 0, {
           properties: ["openDirectory"],
         });
         const firstFilePath = openResult.filePaths[0];
-        const filePaths = fs.statSync(firstFilePath).isDirectory()
-          ? await getImagePaths(firstFilePath)
-          : openResult.filePaths;
+        const filePaths = (
+          fs.statSync(firstFilePath).isDirectory()
+            ? await getImagePaths(firstFilePath)
+            : openResult.filePaths
+        ).filter((filePath) => {
+          return supportedFileExtensions.includes(filePath.split(".").at(-1));
+        });
         const filePathsWithProtocol = filePaths.map(
           (path) => `media://${path}`,
         );
@@ -62,6 +66,30 @@ menuTemplate.splice(1, 0, {
   ],
 });
 const menu = Menu.buildFromTemplate(menuTemplate);
+
+// The other ones in this list seem to just not work at all.
+const supportedFileExtensions = [
+  // "avi", // Seems not to actually work, despite being in the MDN list.
+  // "mpeg",
+  "mp4",
+  "3g2",
+  // "3gp",
+  "apng",
+  "avif",
+  "bmp",
+  "gif",
+  "ico",
+  "jpeg",
+  "jpg",
+  "png",
+  "svg",
+  // "tif",
+  // "tiff",
+  // "ts",
+  "webm",
+  "webp",
+  "ogv",
+];
 
 // console.dir({ defaultMenu: menuTemplate, menu }, { depth: null });
 

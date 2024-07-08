@@ -22,37 +22,40 @@ const Application: React.FC = () => {
   const [counter, setCounter] = useState(0);
   const [darkTheme, setDarkTheme] = useState(true);
   const [versions, setVersions] = useState<Record<string, string>>({});
-  const [filePaths, setFilePaths] = useState([]);
+  const [filePaths, setFilePaths] = useState<string[]>([]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   // console.log({ filePaths });
   const [randomImageIndex, setRandomImageIndex] = useState(0);
   const [filterByWebm, setFilterByWebm] = useState(false);
+  const [fileExtensionFilter, setFileExtensionFilter] = useState("");
   const videoRef = useRef(null);
 
   const filteredFilePaths = useMemo(() => {
     return filePaths.filter((filePath) => {
       const filename = filePath.split("/").at(-1);
-      const extension = filename.split(".").at(-1);
-      if (filterByWebm) {
-        if (extension != "webm") return false;
+      const extension = filename.split(".").at(-1).toLowerCase();
+      if (fileExtensionFilter) {
+        if (extension != fileExtensionFilter) return false;
       }
       return true;
     });
-  }, [filePaths, filterByWebm]);
+  }, [fileExtensionFilter, filePaths]);
   const numImages = filteredFilePaths.length;
 
   // console.log({ filteredFilePaths });
 
-  const fileExtensions = filePaths
-    .filter((path) => path.includes("."))
-    .map((filePath) => {
-      const extension = filePath.split(".").at(-1);
-      return extension;
-    })
-    .reduce((set, extension) => {
-      set.add(extension);
-      return set;
-    }, new Set());
+  const fileExtensions = Array.from(
+    filePaths
+      .filter((path) => path.includes("."))
+      .map((filePath) => {
+        const extension = filePath.split(".").at(-1).toLowerCase();
+        return extension;
+      })
+      .reduce((set, extension) => {
+        set.add(extension);
+        return set;
+      }, new Set<string>()),
+  ).sort();
 
   // console.dir({ fileExtensions });
 
@@ -217,6 +220,16 @@ const Application: React.FC = () => {
             />
             Only webm
           </label>
+          <select onChange={(e) => setFileExtensionFilter(e.target.value)}>
+            <option key={"None"} value={""}>
+              No filter
+            </option>
+            {fileExtensions.map((fileExtension) => (
+              <option key={fileExtension} value={fileExtension}>
+                {fileExtension}
+              </option>
+            ))}
+          </select>
           <span className="themed" style={{ backgroundColor: "black" }}>
             Showing image {currentImageIndex + 1}/
             <span>{filteredFilePaths.length}</span>{" "}
@@ -225,7 +238,7 @@ const Application: React.FC = () => {
         </div>
       </div>
       <div className="image-viewer">
-        {currentImageExtension === "webm" ? (
+        {videoFormats.includes(currentImageExtension) ? (
           <video
             className="image-viewer__image"
             src={currentImagePath}
@@ -242,5 +255,8 @@ const Application: React.FC = () => {
     </div>
   );
 };
+
+// https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
+const videoFormats = ["avi", "mp4", "mpeg", "ogv", "ts", "webm", "3gp", "3g2"];
 
 export default Application;
