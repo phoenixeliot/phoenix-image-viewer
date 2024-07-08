@@ -1,7 +1,7 @@
 const rules = require("./webpack.rules");
 const plugins = require("./webpack.plugins");
 
-module.exports = {
+const webpackConfig = {
   module: {
     rules,
   },
@@ -20,3 +20,7 @@ module.exports = {
    */
   devtool: "inline-source-map",
 };
+
+// console.dir({ rendererWebpackConfig: webpackConfig }, { depth: null });
+
+module.exports = webpackConfig;
