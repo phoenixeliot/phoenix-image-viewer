@@ -23,7 +23,6 @@ const Application: React.FC = () => {
   const [versions, setVersions] = useState<Record<string, string>>({});
   const [fileMetas, setFileMetas] = useState<FileMeta[]>([]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  // console.log({ filePaths });
   const [randomImageIndex, setRandomImageIndex] = useState(0);
   const [fileExtensionFilter, setFileExtensionFilter] = useState("");
   const [sortOrder, setSortOrder] = useState("name");
@@ -43,7 +42,6 @@ const Application: React.FC = () => {
         if (sortOrder === "last-modified") {
           const aDate = a.lastModified.getTime();
           const bDate = b.lastModified.getTime();
-          // console.log({ a, b, aDate, bDate });
           return aDate > bDate ? -1 : aDate < bDate ? 1 : 0;
           // TODO: File size
         } else if (sortOrder === "path") {
@@ -60,8 +58,6 @@ const Application: React.FC = () => {
     [fileMetas, sortOrder],
   );
 
-  console.log({ fileMetas, sortedFileMetas });
-
   const filteredFileMetas = useMemo(() => {
     return sortedFileMetas.filter((fileMeta) => {
       const filename = fileMeta.filePath.split("/").at(-1);
@@ -77,8 +73,6 @@ const Application: React.FC = () => {
   }, [fileExtensionFilter, filterRegex, sortedFileMetas]);
   const numImages = filteredFileMetas.length;
 
-  // console.log({ filteredFilePaths });
-
   const fileExtensions = Array.from(
     filePaths
       .filter((filePath) => filePath.includes("."))
@@ -92,15 +86,13 @@ const Application: React.FC = () => {
       }, new Set<string>()),
   ).sort();
 
-  // console.dir({ fileExtensions });
-
   const randomIndexMap = useMemo(() => {
     const unshuffled = [];
-    for (let i = 0; i < filteredFileMetas.length; i++) {
+    for (let i = 0; i < numImages; i++) {
       unshuffled.push(i);
     }
     const shuffled = [];
-    for (let i = 0; i < filteredFileMetas.length; i++) {
+    for (let i = 0; i < numImages; i++) {
       const item = unshuffled.splice(
         Math.floor(Math.random() * unshuffled.length),
         1,
@@ -108,10 +100,11 @@ const Application: React.FC = () => {
       shuffled.push(...item);
     }
     return shuffled;
-  }, [filteredFileMetas.length]);
+  }, [numImages]);
 
   const reverseRandomIndexMap = useMemo(() => {
-    const reverseMap: number[] = [];
+    // const reverseMap: number[] = [];
+    const reverseMap: Record<any, number> = {};
     randomIndexMap.forEach((value, index) => {
       reverseMap[value] = index;
     });
@@ -137,12 +130,16 @@ const Application: React.FC = () => {
   const goToNextRandomImage = useCallback(() => {
     if (numImages === 0) return;
     if (activeElement.tagName === "INPUT") return; // Prevent randoming when in the search box
-    console.log("Going to next random image");
     const newRandomImageIndex = (randomImageIndex + 1) % numImages;
     const newImageIndex = reverseRandomIndexMap[newRandomImageIndex];
     setRandomImageIndex(newRandomImageIndex);
     setCurrentImageIndex(newImageIndex);
-  }, [activeElement, numImages, randomImageIndex, reverseRandomIndexMap]);
+  }, [
+    activeElement.tagName,
+    numImages,
+    randomImageIndex,
+    reverseRandomIndexMap,
+  ]);
 
   const goToPrevRandomImage = useCallback(() => {
     if (numImages === 0) return;
@@ -182,13 +179,14 @@ const Application: React.FC = () => {
     }
     return () => {
       for (const [event, callback] of events) {
-        window.ipcRenderer.off(event, callback);
+        // window.ipcRenderer.off(event, callback); // Doesn't work, for some reason.
+        window.ipcRenderer.removeAllListeners(event);
       }
     };
   }, [
     goToNextImage,
-    goToNextRandomImage,
     goToPrevImage,
+    goToNextRandomImage,
     goToPrevRandomImage,
     openFiles,
   ]);
@@ -254,7 +252,7 @@ const Application: React.FC = () => {
       setCurrentImageIndex(0);
       setRandomImageIndex(randomIndexMap[0]);
     }
-  }, [currentImageIndex, numImages, randomIndexMap]);
+  }, [currentImageIndex, numImages, randomImageIndex, randomIndexMap]);
 
   return (
     <div id="erwt">
@@ -314,19 +312,19 @@ type FileMeta = {
 const useActiveElement = () => {
   const [active, setActive] = useState(document.activeElement);
 
-  const handleFocusIn = (e: FocusEvent) => {
-    console.log("Setting activeElement", document.activeElement);
+  const handleFocusChange = (e: FocusEvent) => {
     setActive(document.activeElement);
   };
 
   useEffect(() => {
-    document.addEventListener("focusin", handleFocusIn);
+    document.addEventListener("focusin", handleFocusChange);
+    document.addEventListener("focusout", handleFocusChange);
     return () => {
-      document.removeEventListener("focusin", handleFocusIn);
+      document.removeEventListener("focusin", handleFocusChange);
+      document.removeEventListener("focusout", handleFocusChange);
     };
   }, []);
 
-  console.log("activeElement in hook", active);
   return active;
 };
 

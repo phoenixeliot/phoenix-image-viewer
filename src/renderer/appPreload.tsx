@@ -24,10 +24,14 @@ contextBridge.exposeInMainWorld("ipcRenderer", {
     ipcRenderer.on(name, callback);
   },
   off: (name: string, callback: any) => {
-    ipcRenderer.off(name, callback);
+    throw new Error(
+      "ipcRenderer.off doesn't work, use removeAllListeners instead",
+    );
+  },
+  removeAllListeners: (name: string) => {
+    ipcRenderer.removeAllListeners(name);
   },
   invoke: (name: string, ...args: any[]) => {
-    console.log("invoke", name);
     ipcRenderer.invoke(name, ...args);
   },
 });
