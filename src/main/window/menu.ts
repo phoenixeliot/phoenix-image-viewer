@@ -87,11 +87,19 @@ menuTemplate.splice(3, 0, {
       type: "separator",
     },
     {
-      label: "Order by Name",
+      label: "Order by File Name",
       type: "radio",
       click: (menuItem, browserWindow, modifiers) => {
         console.log(menuItem.label);
         browserWindow.webContents.send("set-sort-order", "name");
+      },
+    },
+    {
+      label: "Order by Folder + File Name",
+      type: "radio",
+      click: (menuItem, browserWindow, modifiers) => {
+        console.log(menuItem.label);
+        browserWindow.webContents.send("set-sort-order", "path");
       },
     },
     {

@@ -27,7 +27,10 @@ const Application: React.FC = () => {
   const [randomImageIndex, setRandomImageIndex] = useState(0);
   const [fileExtensionFilter, setFileExtensionFilter] = useState("");
   const [sortOrder, setSortOrder] = useState("name");
+  const [filterRegex, setFilterRegex] = useState("");
   const videoRef = useRef(null);
+
+  const activeElement = useActiveElement();
 
   const filePaths = useMemo(
     () => fileMetas.map((fileMeta) => fileMeta.filePath),
@@ -43,6 +46,9 @@ const Application: React.FC = () => {
           // console.log({ a, b, aDate, bDate });
           return aDate > bDate ? -1 : aDate < bDate ? 1 : 0;
           // TODO: File size
+        } else if (sortOrder === "path") {
+          // Name is the default
+          return a.filePath.localeCompare(b.filePath);
         } else {
           // Name is the default
           return a.filePath
@@ -63,9 +69,12 @@ const Application: React.FC = () => {
       if (fileExtensionFilter) {
         if (extension != fileExtensionFilter) return false;
       }
+      if (filterRegex) {
+        if (!fileMeta.filePath.match(filterRegex)) return false;
+      }
       return true;
     });
-  }, [fileExtensionFilter, sortedFileMetas]);
+  }, [fileExtensionFilter, filterRegex, sortedFileMetas]);
   const numImages = filteredFileMetas.length;
 
   // console.log({ filteredFilePaths });
@@ -127,20 +136,27 @@ const Application: React.FC = () => {
 
   const goToNextRandomImage = useCallback(() => {
     if (numImages === 0) return;
+    if (activeElement.tagName === "INPUT") return; // Prevent randoming when in the search box
     console.log("Going to next random image");
     const newRandomImageIndex = (randomImageIndex + 1) % numImages;
     const newImageIndex = reverseRandomIndexMap[newRandomImageIndex];
     setRandomImageIndex(newRandomImageIndex);
     setCurrentImageIndex(newImageIndex);
-  }, [numImages, randomImageIndex, reverseRandomIndexMap]);
+  }, [activeElement, numImages, randomImageIndex, reverseRandomIndexMap]);
 
   const goToPrevRandomImage = useCallback(() => {
     if (numImages === 0) return;
+    if (activeElement.tagName === "INPUT") return; // Prevent randoming when in the search box
     const newRandomImageIndex = (randomImageIndex + numImages - 1) % numImages;
     const newImageIndex = reverseRandomIndexMap[newRandomImageIndex];
     setRandomImageIndex(newRandomImageIndex);
     setCurrentImageIndex(newImageIndex);
-  }, [numImages, randomImageIndex, reverseRandomIndexMap]);
+  }, [
+    activeElement.tagName,
+    numImages,
+    randomImageIndex,
+    reverseRandomIndexMap,
+  ]);
 
   const openFiles = useCallback(
     (event: IpcRendererEvent, fileMetas: FileMeta[]) => {
@@ -232,10 +248,19 @@ const Application: React.FC = () => {
     });
   }, [currentImagePath]);
 
+  // If filtering reduced the max to below the current index, jump back to 0
+  useEffect(() => {
+    if (currentImageIndex > numImages) {
+      setCurrentImageIndex(0);
+      setRandomImageIndex(randomIndexMap[0]);
+    }
+  }, [currentImageIndex, numImages, randomIndexMap]);
+
   return (
     <div id="erwt">
       <div className="">
         <div className="center">
+          <input onChange={(e) => setFilterRegex(e.target.value)} />
           <select onChange={(e) => setFileExtensionFilter(e.target.value)}>
             <option key={"None"} value={""}>
               No filter
@@ -247,8 +272,13 @@ const Application: React.FC = () => {
             ))}
           </select>
           <span className="themed" style={{ backgroundColor: "black" }}>
-            Showing image {currentImageIndex + 1}/
-            <span>{filteredFileMetas.length}</span>{" "}
+            Showing image{" "}
+            <input
+              type="number"
+              onChange={(e) => setCurrentImageIndex(Number(e.target.value) - 1)}
+              value={currentImageIndex + 1}
+            />
+            /<span>{filteredFileMetas.length}</span>{" "}
           </span>
           <div style={{ backgroundColor: "black" }}>{currentImagePath}</div>
         </div>
@@ -279,6 +309,25 @@ type FileMeta = {
   filePath: string;
   lastModified: Date;
   // size: number;
+};
+
+const useActiveElement = () => {
+  const [active, setActive] = useState(document.activeElement);
+
+  const handleFocusIn = (e: FocusEvent) => {
+    console.log("Setting activeElement", document.activeElement);
+    setActive(document.activeElement);
+  };
+
+  useEffect(() => {
+    document.addEventListener("focusin", handleFocusIn);
+    return () => {
+      document.removeEventListener("focusin", handleFocusIn);
+    };
+  }, []);
+
+  console.log("activeElement in hook", active);
+  return active;
 };
 
 export default Application;
