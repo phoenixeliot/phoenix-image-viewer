@@ -54,7 +54,7 @@ module.exports = {
         // devContentSecurityPolicy: `default-src *; script-src 'self' 'unsafe-inline' data:`,
         //
         // Webpack Dev Server port
-        port: 3000,
+        port: 4444, // Something unlikely to be used by other dev stuff
         // Logger port
         loggerPort: 9000,
         // Main process webpack configuration
