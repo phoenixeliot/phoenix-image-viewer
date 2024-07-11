@@ -20,7 +20,6 @@ app.whenReady().then(() => {
   // This works for seeking where protocol.handle does not. See https://github.com/electron/electron/issues/38749
   protocol.registerFileProtocol("media", (req, callback) => {
     const pathToMedia = decodeURI("/" + req.url.replace("media://", ""));
-    // console.log({ pathToMedia });
     callback(pathToMedia); // simplified path for this example
   });
 

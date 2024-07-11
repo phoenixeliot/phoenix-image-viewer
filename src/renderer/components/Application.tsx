@@ -238,7 +238,7 @@ const Application: React.FC = () => {
 
   const currentImagePath = filteredFileMetas[currentImageIndex]?.filePath;
   const currentImageExtension = currentImagePath?.split(".").at(-1);
-  const currentImageUrl = `media://${currentImagePath}`;
+  const currentImageUrl = encodeURI(`media://${currentImagePath}`);
 
   useEffect(() => {
     window.ipcRenderer.invoke("setBrowseState", {
@@ -255,36 +255,11 @@ const Application: React.FC = () => {
   }, [currentImageIndex, numImages, randomImageIndex, randomIndexMap]);
 
   return (
-    <div id="erwt">
-      <div className="">
-        <div className="center">
-          <input onChange={(e) => setFilterRegex(e.target.value)} />
-          <select onChange={(e) => setFileExtensionFilter(e.target.value)}>
-            <option key={"None"} value={""}>
-              No filter
-            </option>
-            {fileExtensions.map((fileExtension) => (
-              <option key={fileExtension} value={fileExtension}>
-                {fileExtension}
-              </option>
-            ))}
-          </select>
-          <span className="themed" style={{ backgroundColor: "black" }}>
-            Showing image{" "}
-            <input
-              type="number"
-              onChange={(e) => setCurrentImageIndex(Number(e.target.value) - 1)}
-              value={currentImageIndex + 1}
-            />
-            /<span>{filteredFileMetas.length}</span>{" "}
-          </span>
-          <div style={{ backgroundColor: "black" }}>{currentImagePath}</div>
-        </div>
-      </div>
-      <div className="image-viewer">
+    <>
+      <div className="image-container">
         {videoFormats.includes(currentImageExtension) ? (
           <video
-            className="image-viewer__image"
+            className="image"
             src={currentImageUrl}
             loop
             controls
@@ -293,10 +268,33 @@ const Application: React.FC = () => {
             onPlay={() => videoRef.current.focus()}
           />
         ) : (
-          <img className="image-viewer__image" src={currentImageUrl} />
+          <img className="image" src={currentImageUrl} />
         )}
       </div>
-    </div>
+      <div className="status-bar">
+        <input onChange={(e) => setFilterRegex(e.target.value)} />
+        <select onChange={(e) => setFileExtensionFilter(e.target.value)}>
+          <option key={"None"} value={""}>
+            No filter
+          </option>
+          {fileExtensions.map((fileExtension) => (
+            <option key={fileExtension} value={fileExtension}>
+              {fileExtension}
+            </option>
+          ))}
+        </select>
+        <span>
+          Showing image{" "}
+          <input
+            type="number"
+            onChange={(e) => setCurrentImageIndex(Number(e.target.value) - 1)}
+            value={currentImageIndex + 1}
+          />
+          /<span>{filteredFileMetas.length}</span>{" "}
+        </span>
+        <div style={{ backgroundColor: "black" }}>{currentImagePath}</div>
+      </div>
+    </>
   );
 };
 
