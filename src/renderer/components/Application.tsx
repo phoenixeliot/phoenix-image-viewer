@@ -22,8 +22,10 @@ const Application: React.FC = () => {
   const [darkTheme, setDarkTheme] = useState(true);
   const [versions, setVersions] = useState<Record<string, string>>({});
   const [fileMetas, setFileMetas] = useState<FileMeta[]>([]);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [randomImageIndex, setRandomImageIndex] = useState(0);
+  const [currentImagePath, setCurrentImagePath] = useState(
+    fileMetas[0]?.filePath,
+  );
+  // const [randomImageIndex, setRandomImageIndex] = useState(0);
   const [fileExtensionFilter, setFileExtensionFilter] = useState("");
   const [sortOrder, setSortOrder] = useState("name");
   const [filterRegex, setFilterRegex] = useState("");
@@ -31,10 +33,23 @@ const Application: React.FC = () => {
 
   const activeElement = useActiveElement();
 
-  const filePaths = useMemo(
+  const originalFilePaths = useMemo(
     () => fileMetas.map((fileMeta) => fileMeta.filePath),
     [fileMetas],
   );
+
+  const fileExtensions = Array.from(
+    originalFilePaths
+      .filter((filePath) => filePath.includes("."))
+      .map((filePath) => {
+        const extension = filePath.split(".").at(-1).toLowerCase();
+        return extension;
+      })
+      .reduce((set, extension) => {
+        set.add(extension);
+        return set;
+      }, new Set<string>()),
+  ).sort();
 
   const sortedFileMetas = useMemo(
     () =>
@@ -72,21 +87,41 @@ const Application: React.FC = () => {
     });
   }, [fileExtensionFilter, filterRegex, sortedFileMetas]);
   const numImages = filteredFileMetas.length;
+  const constrainIndex = useCallback(
+    (index: number) => {
+      return (index + numImages) % numImages;
+    },
+    [numImages],
+  );
+  const pathIndexMap = useMemo(() => {
+    const reverseMap: Record<any, number> = {};
+    filteredFileMetas.forEach((value, index) => {
+      reverseMap[value.filePath] = index;
+    });
+    return reverseMap;
+  }, [filteredFileMetas]);
 
-  const fileExtensions = Array.from(
-    filePaths
-      .filter((filePath) => filePath.includes("."))
-      .map((filePath) => {
-        const extension = filePath.split(".").at(-1).toLowerCase();
-        return extension;
-      })
-      .reduce((set, extension) => {
-        set.add(extension);
-        return set;
-      }, new Set<string>()),
-  ).sort();
+  const currentImageIndex = pathIndexMap[currentImagePath] || 0;
+  const setCurrentImageIndex = useMemo(
+    () => (index: number) => {
+      console.log({ currentIndex: currentImageIndex, newIndex: index });
+      setCurrentImagePath(filteredFileMetas[index]?.filePath);
+    },
+    [currentImageIndex, filteredFileMetas],
+  );
 
-  const randomIndexMap = useMemo(() => {
+  // If filter changes, check if image is in filter, and if not, reset the index
+  useEffect(() => {
+    if (
+      filteredFileMetas.length > 0 &&
+      !filteredFileMetas.some((meta) => meta.filePath === currentImagePath)
+    ) {
+      setCurrentImageIndex(0);
+    }
+  }, [currentImagePath, filteredFileMetas, setCurrentImageIndex]);
+
+  // Shuffle the indexes so we can map them
+  const shuffledIndexes = useMemo(() => {
     const unshuffled = [];
     for (let i = 0; i < numImages; i++) {
       unshuffled.push(i);
@@ -102,57 +137,62 @@ const Application: React.FC = () => {
     return shuffled;
   }, [numImages]);
 
-  const reverseRandomIndexMap = useMemo(() => {
-    // const reverseMap: number[] = [];
-    const reverseMap: Record<any, number> = {};
-    randomIndexMap.forEach((value, index) => {
-      reverseMap[value] = index;
+  // Map from [index -> random next image index]
+  const randomIndexMap = useMemo(() => {
+    const map: Record<number, number> = {};
+    shuffledIndexes.forEach((next, cur) => {
+      map[cur] = next;
     });
-    return reverseMap;
-  }, [randomIndexMap]);
+    return map;
+  }, [shuffledIndexes]);
+
+  // Map from [index -> random previous image index]
+  // This allows going backwards in the random order
+  const reverseRandomIndexMap = useMemo(() => {
+    const map: Record<number, number> = {};
+    shuffledIndexes.forEach((cur, prev) => {
+      map[cur] = prev;
+    });
+    return map;
+  }, [shuffledIndexes]);
+
+  const randomImageIndex = reverseRandomIndexMap[currentImageIndex];
 
   const goToNextImage = useCallback(() => {
     if (numImages === 0) return;
-    const newImageIndex = (currentImageIndex + 1) % numImages;
-    const newRandomImageIndex = randomIndexMap[newImageIndex];
-    setRandomImageIndex(newRandomImageIndex);
+    const newImageIndex = constrainIndex(currentImageIndex + 1);
     setCurrentImageIndex(newImageIndex);
-  }, [currentImageIndex, numImages, randomIndexMap]);
+  }, [constrainIndex, currentImageIndex, numImages, setCurrentImageIndex]);
 
   const goToPrevImage = useCallback(() => {
     if (numImages === 0) return;
-    const newImageIndex = (currentImageIndex + numImages - 1) % numImages;
-    const newRandomImageIndex = randomIndexMap[newImageIndex];
-    setRandomImageIndex(newRandomImageIndex);
+    const newImageIndex = constrainIndex(currentImageIndex + numImages - 1);
     setCurrentImageIndex(newImageIndex);
-  }, [currentImageIndex, numImages, randomIndexMap]);
+  }, [constrainIndex, currentImageIndex, numImages, setCurrentImageIndex]);
 
   const goToNextRandomImage = useCallback(() => {
     if (numImages === 0) return;
     if (activeElement.tagName === "INPUT") return; // Prevent randoming when in the search box
-    const newRandomImageIndex = (randomImageIndex + 1) % numImages;
-    const newImageIndex = reverseRandomIndexMap[newRandomImageIndex];
-    setRandomImageIndex(newRandomImageIndex);
-    setCurrentImageIndex(newImageIndex);
+    setCurrentImageIndex(randomIndexMap[currentImageIndex]);
   }, [
     activeElement.tagName,
+    currentImageIndex,
     numImages,
-    randomImageIndex,
-    reverseRandomIndexMap,
+    randomIndexMap,
+    setCurrentImageIndex,
   ]);
 
   const goToPrevRandomImage = useCallback(() => {
     if (numImages === 0) return;
     if (activeElement.tagName === "INPUT") return; // Prevent randoming when in the search box
-    const newRandomImageIndex = (randomImageIndex + numImages - 1) % numImages;
-    const newImageIndex = reverseRandomIndexMap[newRandomImageIndex];
-    setRandomImageIndex(newRandomImageIndex);
+    const newImageIndex = reverseRandomIndexMap[currentImageIndex];
     setCurrentImageIndex(newImageIndex);
   }, [
     activeElement.tagName,
+    currentImageIndex,
     numImages,
-    randomImageIndex,
     reverseRandomIndexMap,
+    setCurrentImageIndex,
   ]);
 
   const openFiles = useCallback(
@@ -236,9 +276,9 @@ const Application: React.FC = () => {
     setDarkTheme(!darkTheme);
   }
 
-  const currentImagePath = filteredFileMetas[currentImageIndex]?.filePath;
   const currentImageExtension = currentImagePath?.split(".").at(-1);
-  const currentImageUrl = encodeURI(`media://${currentImagePath}`);
+  const currentImageUrl =
+    currentImagePath && encodeURI(`media://${currentImagePath}`);
 
   useEffect(() => {
     window.ipcRenderer.invoke("setBrowseState", {
@@ -250,14 +290,20 @@ const Application: React.FC = () => {
   useEffect(() => {
     if (currentImageIndex > numImages) {
       setCurrentImageIndex(0);
-      setRandomImageIndex(randomIndexMap[0]);
+      // setRandomImageIndex(randomIndexMap[0]);
     }
-  }, [currentImageIndex, numImages, randomImageIndex, randomIndexMap]);
+  }, [
+    currentImageIndex,
+    numImages,
+    randomImageIndex,
+    randomIndexMap,
+    setCurrentImageIndex,
+  ]);
 
   return (
     <>
       <div className="image-container">
-        {videoFormats.includes(currentImageExtension) ? (
+        {currentImageUrl && videoFormats.includes(currentImageExtension) ? (
           <video
             className="image"
             src={currentImageUrl}
@@ -287,10 +333,15 @@ const Application: React.FC = () => {
           Showing image{" "}
           <input
             type="number"
-            onChange={(e) => setCurrentImageIndex(Number(e.target.value) - 1)}
+            onChange={(e) =>
+              setCurrentImageIndex(constrainIndex(Number(e.target.value) - 1))
+            }
             value={currentImageIndex + 1}
           />
           /<span>{filteredFileMetas.length}</span>{" "}
+        </span>
+        <span>
+          Random index: {randomImageIndex + 1}/{filteredFileMetas.length}
         </span>
         <div style={{ backgroundColor: "black" }}>{currentImagePath}</div>
       </div>
