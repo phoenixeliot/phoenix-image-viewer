@@ -16,10 +16,19 @@ menuTemplate.splice(1, 0, {
         const openResult = await dialog.showOpenDialog({
           properties: ["openDirectory"],
         });
-        const firstFilePath = openResult.filePaths[0];
-        const filePaths = await getImagePaths(firstFilePath);
+        const rootPath = openResult.filePaths[0];
+        const folderAndFilePaths = await getImagePaths(rootPath);
+        const folderMetas = await Promise.all(
+          folderAndFilePaths.folders.map(async (filePath) => {
+            const stat = await fs.promises.stat(filePath);
+            return {
+              filePath,
+              lastModified: stat.mtime,
+            };
+          }),
+        );
         const fileMetas = await Promise.all(
-          filePaths.map(async (filePath) => {
+          folderAndFilePaths.files.map(async (filePath) => {
             const stat = await fs.promises.stat(filePath);
             return {
               filePath,
@@ -28,7 +37,11 @@ menuTemplate.splice(1, 0, {
             };
           }),
         );
-        browserWindow.webContents.send("open-files", fileMetas);
+        browserWindow.webContents.send("open-files", {
+          rootPath: rootPath,
+          folderMetas,
+          fileMetas,
+        });
       },
     },
     {

@@ -21,6 +21,8 @@ const Application: React.FC = () => {
   const [counter, setCounter] = useState(0);
   const [darkTheme, setDarkTheme] = useState(true);
   const [versions, setVersions] = useState<Record<string, string>>({});
+  const [rootPath, setRootPath] = useState<string>(null);
+  const [folderMetas, setFolderMetas] = useState<FileMeta[]>([]);
   const [fileMetas, setFileMetas] = useState<FileMeta[]>([]);
   const [currentImagePath, setCurrentImagePath] = useState(
     fileMetas[0]?.filePath,
@@ -196,8 +198,17 @@ const Application: React.FC = () => {
   ]);
 
   const openFiles = useCallback(
-    (event: IpcRendererEvent, fileMetas: FileMeta[]) => {
-      setFileMetas(fileMetas);
+    (
+      event: IpcRendererEvent,
+      itemMetas: {
+        rootPath: string;
+        folderMetas: FileMeta[];
+        fileMetas: FileMeta[];
+      },
+    ) => {
+      setRootPath(itemMetas.rootPath);
+      setFolderMetas(itemMetas.folderMetas);
+      setFileMetas(itemMetas.fileMetas);
     },
     [],
   );

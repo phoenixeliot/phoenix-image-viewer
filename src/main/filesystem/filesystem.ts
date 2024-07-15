@@ -2,9 +2,12 @@ import { Dirent, readdirSync } from "fs";
 import path from "path";
 
 export function getImagePaths(dirPath: string, { recursive = false } = {}) {
-  const result = getImageDirents(dirPath, { recursive }).map((item) =>
-    path.join(item.parentPath, item.name),
-  );
+  const items = getImageDirents(dirPath, { recursive });
+  const result = {
+    root: dirPath,
+    folders: items.folders.map((item) => path.join(item.parentPath, item.name)),
+    files: items.files.map((item) => path.join(item.parentPath, item.name)),
+  };
   return result;
 }
 
@@ -13,20 +16,29 @@ export function getImageDirents(dirPath: string, { recursive = false } = {}) {
     recursive: false, // Otherwise we try to read some macOS folder and it fails, so we do it manually
     withFileTypes: true,
   }).filter((item) => !item.name.startsWith("."));
-  const result: typeof items = [];
+  const folders: typeof items = [];
+  const files: typeof items = [];
   for (const item of items) {
     if (item.isFile()) {
-      result.push(item);
+      files.push(item);
     } else if (item.isDirectory()) {
-      result.push(...getImageDirents(path.join(item.parentPath, item.name)));
+      folders.push(item);
+      const nestedItems = getImageDirents(
+        path.join(item.parentPath, item.name),
+      );
+      folders.push(...nestedItems.folders);
+      files.push(...nestedItems.files);
     } else {
       console.error("Item is somehow neither file nor directory: ", item);
       throw Error;
     }
   }
-  return result.filter((fileMeta) => {
-    return supportedFileExtensions.includes(fileMeta.name.split(".").at(-1));
-  });
+  return {
+    folders,
+    files: files.filter((fileMeta) => {
+      return supportedFileExtensions.includes(fileMeta.name.split(".").at(-1));
+    }),
+  };
 }
 
 // The other ones in this list seem to just not work at all.
