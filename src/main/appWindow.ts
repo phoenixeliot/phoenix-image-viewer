@@ -3,6 +3,7 @@ import path from "path";
 import { registerTitlebarIpc } from "@main/window/titlebarIpc";
 import { registerBrowseStateIpc } from "@main/browseState/browseStateIpc";
 import { windowStateKeeper } from "@main/stateKeeper";
+import { registerFilesystemIpc } from "@main/filesystem/filesystem";
 
 // Electron Forge automatically creates these entry points
 declare const APP_WINDOW_WEBPACK_ENTRY: string;
@@ -73,6 +74,7 @@ export async function createAppWindow(): Promise<BrowserWindow> {
      * to Communicate asynchronously from the main process to renderer processes.
      */
     registerTitlebarIpc(appWindow);
+    registerFilesystemIpc(appWindow);
     registerBrowseStateIpc(mainWindowStateKeeper.setBrowseState);
   }
 

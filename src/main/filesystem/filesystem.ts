@@ -1,4 +1,6 @@
-import { Dirent, readdirSync } from "fs";
+import { BrowserWindow, IpcMainInvokeEvent, ipcMain } from "electron";
+import { readdirSync } from "fs";
+import * as fs from "fs";
 import path from "path";
 
 export function getImagePaths(dirPath: string, { recursive = false } = {}) {
@@ -40,6 +42,20 @@ export function getImageDirents(dirPath: string, { recursive = false } = {}) {
     }),
   };
 }
+
+export const registerFilesystemIpc = (mainWindow: BrowserWindow) => {
+  ipcMain.handle(
+    "move-file",
+    async (
+      event: IpcMainInvokeEvent,
+      { from, to }: { from: string; to: string },
+    ) => {
+      fs.renameSync(from, to);
+      console.log({ from, to });
+      return to;
+    },
+  );
+};
 
 // The other ones in this list seem to just not work at all.
 const supportedFileExtensions = [

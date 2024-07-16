@@ -32,7 +32,7 @@ contextBridge.exposeInMainWorld("ipcRenderer", {
     ipcRenderer.removeAllListeners(name);
   },
   invoke: (name: string, ...args: any[]) => {
-    ipcRenderer.invoke(name, ...args);
+    return ipcRenderer.invoke(name, ...args);
   },
 });
 

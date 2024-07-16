@@ -36,3 +36,42 @@ video.image:focus {
   flex-grow: 0;
   flex-shrink: 0;
 }
+
+.action-dialog {
+  position: absolute;
+  top: 10px;
+  display: flex;
+  flex-direction: column;
+  width: 600px;
+  max-height: 600px;
+  z-index: 2550;
+  left: 50%;
+  margin-left: -300px;
+  max-width: 100%;
+  border-radius: 6px;
+  background-color: #222222;
+}
+.action-dialog__header {
+  padding: 8px 6px 6px;
+  display: flex;
+}
+.action-dialog__input {
+  flex-grow: 1;
+  background-color: #313131;
+  border: thin solid grey;
+  color: white;
+}
+.action-dialog__list {
+  padding: 0 6px 6px;
+  overflow-y: scroll;
+}
+.action-dialog__list-item {
+  margin: 3px;
+  border-radius: 2px;
+}
+.action-dialog__list-item:hover {
+  background-color: #2b2d2e;
+}
+.action-dialog__list-item_selected {
+  background-color: #03395e;
+}

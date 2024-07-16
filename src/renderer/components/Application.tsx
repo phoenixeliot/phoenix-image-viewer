@@ -1,3 +1,6 @@
+import MoveFileDialog from "@components/MoveFileDialog";
+import { FileMeta } from "@renderer/types";
+import constrain from "@src/utils/constrain";
 import "@styles/app.scss";
 import { type ipcRenderer, type IpcRendererEvent } from "electron";
 import React, {
@@ -31,6 +34,7 @@ const Application: React.FC = () => {
   const [fileExtensionFilter, setFileExtensionFilter] = useState("");
   const [sortOrder, setSortOrder] = useState("name");
   const [filterRegex, setFilterRegex] = useState("");
+  const [showFileMoveDialog, setShowFileMoveDialog] = useState(false);
   const videoRef = useRef(null);
 
   const activeElement = useActiveElement();
@@ -91,7 +95,7 @@ const Application: React.FC = () => {
   const numImages = filteredFileMetas.length;
   const constrainIndex = useCallback(
     (index: number) => {
-      return (index + numImages) % numImages;
+      return constrain(index, numImages);
     },
     [numImages],
   );
@@ -213,6 +217,33 @@ const Application: React.FC = () => {
     [],
   );
 
+  const openMoveFileDialog = useCallback((event: IpcRendererEvent) => {
+    setShowFileMoveDialog(true);
+  }, []);
+
+  const moveFile = useCallback(
+    async ({ from, to }: { from: string; to: string }) => {
+      // TODO: Check success
+      const newPath = await window.ipcRenderer.invoke("move-file", {
+        from,
+        to,
+      });
+      console.log(`Moving ${from} to ${newPath}`);
+      setFileMetas((metas) =>
+        metas.map((meta) =>
+          meta.filePath === from
+            ? {
+                ...meta,
+                filePath: newPath,
+              }
+            : meta,
+        ),
+      );
+      setCurrentImagePath(newPath);
+    },
+    [],
+  );
+
   useEffect(() => {
     const events = [
       ["go-to-next-random-image", goToNextRandomImage],
@@ -220,6 +251,7 @@ const Application: React.FC = () => {
       ["go-to-next-image", goToNextImage],
       ["go-to-prev-image", goToPrevImage],
       ["open-files", openFiles],
+      ["open-move-file-dialog", openMoveFileDialog],
       [
         "set-sort-order",
         (event: IpcRendererEvent, order: string) => setSortOrder(order),
@@ -240,6 +272,7 @@ const Application: React.FC = () => {
     goToNextRandomImage,
     goToPrevRandomImage,
     openFiles,
+    openMoveFileDialog,
   ]);
 
   // images: 0 1 2 3 4
@@ -313,6 +346,21 @@ const Application: React.FC = () => {
 
   return (
     <>
+      {showFileMoveDialog && (
+        <MoveFileDialog
+          rootPath={rootPath}
+          folderMetas={folderMetas}
+          onClose={() => setShowFileMoveDialog(false)}
+          onSelectFolder={(destFolder) => {
+            // TODO: Localize paths in Windows
+            const pathChunks = currentImagePath.split("/");
+            const baseName = pathChunks.slice(0, -1).join("/");
+            const fileName = pathChunks.at(-1);
+            const newPath = destFolder.replace(/\/?$/, "/") + fileName;
+            moveFile({ from: currentImagePath, to: newPath });
+          }}
+        />
+      )}
       <div className="image-container">
         {currentImageUrl && videoFormats.includes(currentImageExtension) ? (
           <video
@@ -362,12 +410,6 @@ const Application: React.FC = () => {
 
 // https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
 const videoFormats = ["avi", "mp4", "mpeg", "ogv", "ts", "webm", "3gp", "3g2"];
-
-type FileMeta = {
-  filePath: string;
-  lastModified: Date;
-  // size: number;
-};
 
 const useActiveElement = () => {
   const [active, setActive] = useState(document.activeElement);

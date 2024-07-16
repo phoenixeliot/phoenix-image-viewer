@@ -4,3 +4,8 @@ declare global {
     fs: any;
   }
 }
+
+export type FileMeta = {
+  filePath: string;
+  lastModified: Date;
+};

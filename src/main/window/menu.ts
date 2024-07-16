@@ -56,6 +56,13 @@ menuTemplate.splice(1, 0, {
         shell.showItemInFolder(filePath);
       },
     },
+    {
+      accelerator: "Option+M", // TODO: Add windows shortcut
+      label: "Move file...", // TODO: Localize windows text
+      click: async (menuItem, browserWindow, modifiers) => {
+        browserWindow.webContents.send("open-move-file-dialog");
+      },
+    },
   ],
 });
 menuTemplate.splice(3, 0, {
