@@ -22,7 +22,10 @@ export default function MoveFileDialog({
   const inputRef = useRef(null);
   const currentItemRef = useRef(null);
   const [filterText, setFilterText] = useState("");
-  const [selectedFolder, setSelectedFolder] = useState(folderMetas[0].filePath);
+  const [selectedFolder, setSelectedFolder] = useState({
+    path: folderMetas[0].filePath,
+    exists: true,
+  });
   const folderPaths = useMemo(
     () =>
       folderMetas
@@ -31,13 +34,29 @@ export default function MoveFileDialog({
     [filterText, folderMetas, rootPath],
   );
 
+  const menuItems = useMemo(
+    () => [
+      ...folderPaths.map((folderPath) => ({
+        path: folderPath,
+        exists: true,
+      })),
+      {
+        path: filterText,
+        exists: false,
+      },
+    ],
+    [folderPaths],
+  );
+
   useEffect(() => {
-    setSelectedFolder(folderPaths[0]);
+    setSelectedFolder(menuItems[0]);
   }, [filterText, folderPaths]);
 
   const absoluteFromRelative = useCallback(
     (relativePath: string) => {
-      return rootPath + relativePath;
+      return (
+        rootPath.replace(/\/*$/, "") + "/" + relativePath.replace(/^\/*/, "")
+      );
     },
     [rootPath],
   );
@@ -47,10 +66,11 @@ export default function MoveFileDialog({
       if (e.key === "ArrowUp") {
         e.preventDefault();
         setSelectedFolder(
-          folderPaths[
+          menuItems[
             constrain(
-              folderPaths.indexOf(selectedFolder) - 1,
-              folderPaths.length,
+              menuItems.findIndex(({ path }) => selectedFolder.path === path) -
+                1,
+              menuItems.length,
             )
           ],
         );
@@ -60,10 +80,11 @@ export default function MoveFileDialog({
       } else if (e.key === "ArrowDown") {
         e.preventDefault();
         setSelectedFolder(
-          folderPaths[
+          menuItems[
             constrain(
-              folderPaths.indexOf(selectedFolder) + 1,
-              folderPaths.length,
+              menuItems.findIndex(({ path }) => selectedFolder.path === path) +
+                1,
+              menuItems.length,
             )
           ],
         );
@@ -76,7 +97,7 @@ export default function MoveFileDialog({
       } else if (e.key === "Enter") {
         e.preventDefault();
         onClose();
-        onSelectFolder(absoluteFromRelative(selectedFolder));
+        onSelectFolder(absoluteFromRelative(selectedFolder.path));
       }
     };
     document.addEventListener("keydown", arrowHandler);
@@ -103,23 +124,33 @@ export default function MoveFileDialog({
         {folderPaths.map((folderPath) => {
           const parts = folderPath.split("/");
           const folderName = parts.at(-1);
-          const isSelected = selectedFolder === folderPath;
+          const isSelected = selectedFolder.path === folderPath;
           return (
             <div
               key={folderPath}
               ref={isSelected ? currentItemRef : null}
-              className={`action-dialog__folder-button ${isSelected ? "action-dialog__list-item_selected" : ""}`}
-              style={{ marginLeft: `${(parts.length - 1) * 1}ex` }}
-              onClick={() => {
-                debugger;
-                console.log({ rootPath, folderPath });
-                return onSelectFolder(absoluteFromRelative(folderPath));
-              }} // DEBUG
+              className={`action-dialog__list-item ${isSelected ? "action-dialog__list-item_selected" : ""}`}
+              onClick={() => onSelectFolder(absoluteFromRelative(folderPath))}
             >
-              {folderName}
+              {folderPath}
             </div>
           );
         })}
+        {(() => {
+          const folderPath = filterText;
+          const parts = folderPath.split("/");
+          const folderName = parts.at(-1);
+          const isSelected = selectedFolder.path === folderPath;
+          return (
+            <div
+              ref={isSelected ? currentItemRef : null}
+              className={`action-dialog__list-item ${isSelected ? "action-dialog__list-item_selected" : ""}`}
+              onClick={() => onSelectFolder(absoluteFromRelative(folderPath))}
+            >
+              Create folder: {folderName}
+            </div>
+          );
+        })()}
       </div>
     </div>
   );

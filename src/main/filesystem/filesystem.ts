@@ -50,8 +50,9 @@ export const registerFilesystemIpc = (mainWindow: BrowserWindow) => {
       event: IpcMainInvokeEvent,
       { from, to }: { from: string; to: string },
     ) => {
+      console.log("Moving file", { from, to });
+      fs.mkdirSync(path.dirname(to), { recursive: true });
       fs.renameSync(from, to);
-      console.log({ from, to });
       return to;
     },
   );
