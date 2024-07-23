@@ -32,11 +32,13 @@ const Application: React.FC = () => {
   );
   // const [randomImageIndex, setRandomImageIndex] = useState(0);
   const [fileExtensionFilter, setFileExtensionFilter] = useState("");
+  const [includeImagesFromFolders, setIncludeImagesFromFolders] =
+    useState(true);
   const [sortOrder, setSortOrder] = useState("name");
   const [filterRegex, setFilterRegex] = useState("");
   const [showFileMoveDialog, setShowFileMoveDialog] = useState(false);
+  const [prevImageIndex, setPrevImageIndex] = useState(0);
   const videoRef = useRef(null);
-
   const activeElement = useActiveElement();
 
   const originalFilePaths = useMemo(
@@ -89,9 +91,30 @@ const Application: React.FC = () => {
       if (filterRegex) {
         if (!fileMeta.filePath.match(filterRegex)) return false;
       }
+      if (!includeImagesFromFolders) {
+        console.log({
+          fileMeta,
+          relative: fileMeta.filePath.replace(rootPath, "").replace(/^\/*/, ""),
+        });
+        if (
+          fileMeta.filePath
+            .replace(rootPath, "")
+            .replace(/^\/*/, "")
+            .includes("/")
+        ) {
+          console.log("Filtering out path:", fileMeta.filePath);
+          return false;
+        }
+      }
       return true;
     });
-  }, [fileExtensionFilter, filterRegex, sortedFileMetas]);
+  }, [
+    fileExtensionFilter,
+    filterRegex,
+    includeImagesFromFolders,
+    rootPath,
+    sortedFileMetas,
+  ]);
   const numImages = filteredFileMetas.length;
   const constrainIndex = useCallback(
     (index: number) => {
@@ -115,6 +138,10 @@ const Application: React.FC = () => {
     },
     [currentImageIndex, filteredFileMetas],
   );
+  useEffect(() => {
+    if (prevImageIndex != currentImageIndex)
+      setPrevImageIndex(currentImageIndex);
+  }, [prevImageIndex, currentImageIndex]);
 
   // If filter changes, check if image is in filter, and if not, reset the index
   useEffect(() => {
@@ -122,9 +149,17 @@ const Application: React.FC = () => {
       filteredFileMetas.length > 0 &&
       !filteredFileMetas.some((meta) => meta.filePath === currentImagePath)
     ) {
-      setCurrentImageIndex(0);
+      // setCurrentImagePath(null);
+      setCurrentImageIndex(prevImageIndex);
     }
-  }, [currentImagePath, filteredFileMetas, setCurrentImageIndex]);
+  }, [
+    currentImageIndex,
+    currentImagePath,
+    filteredFileMetas,
+    includeImagesFromFolders,
+    prevImageIndex,
+    setCurrentImageIndex,
+  ]);
 
   // Shuffle the indexes so we can map them
   const shuffledIndexes = useMemo(() => {
@@ -256,6 +291,13 @@ const Application: React.FC = () => {
         "set-sort-order",
         (event: IpcRendererEvent, order: string) => setSortOrder(order),
       ],
+      [
+        "set-include-images-from-folders",
+        (event: IpcRendererEvent, enabled: boolean) => {
+          console.log("setIncludeImagesFromFolders", enabled);
+          return setIncludeImagesFromFolders(enabled);
+        },
+      ],
     ] as const;
     for (const [event, callback] of events) {
       window.ipcRenderer.on(event, callback);
@@ -346,21 +388,33 @@ const Application: React.FC = () => {
 
   return (
     <>
-      {showFileMoveDialog && (
-        <MoveFileDialog
-          rootPath={rootPath}
-          folderMetas={folderMetas}
-          onClose={() => setShowFileMoveDialog(false)}
-          onSelectFolder={(destFolder) => {
-            // TODO: Localize paths in Windows
-            const pathChunks = currentImagePath.split("/");
-            const baseName = pathChunks.slice(0, -1).join("/");
-            const fileName = pathChunks.at(-1);
-            const newPath = destFolder.replace(/\/?$/, "/") + fileName;
-            moveFile({ from: currentImagePath, to: newPath });
-          }}
-        />
-      )}
+      <MoveFileDialog
+        isOpen={showFileMoveDialog}
+        rootPath={rootPath}
+        folderMetas={folderMetas}
+        onClose={() => setShowFileMoveDialog(false)}
+        onSelectFolder={(destFolder) => {
+          // TODO: Localize paths in Windows
+          const pathChunks = currentImagePath.split("/");
+          const baseName = pathChunks.slice(0, -1).join("/");
+          const fileName = pathChunks.at(-1);
+          const newPath = destFolder.replace(/\/?$/, "/") + fileName;
+          if (
+            !folderMetas.some(
+              (folderMeta) => folderMeta.filePath === destFolder,
+            )
+          ) {
+            setFolderMetas([
+              ...folderMetas,
+              {
+                filePath: destFolder,
+                lastModified: new Date(),
+              },
+            ]);
+          }
+          moveFile({ from: currentImagePath, to: newPath });
+        }}
+      />
       <div className="image-container">
         {currentImageUrl && videoFormats.includes(currentImageExtension) ? (
           <video
@@ -380,7 +434,7 @@ const Application: React.FC = () => {
         <input onChange={(e) => setFilterRegex(e.target.value)} />
         <select onChange={(e) => setFileExtensionFilter(e.target.value)}>
           <option key={"None"} value={""}>
-            No filter
+            Filter extension...
           </option>
           {fileExtensions.map((fileExtension) => (
             <option key={fileExtension} value={fileExtension}>

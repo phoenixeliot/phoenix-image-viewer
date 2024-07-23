@@ -138,6 +138,21 @@ menuTemplate.splice(3, 0, {
     //     browserWindow.webContents.send("set-sort-order", "file-size");
     //   },
     // },
+    {
+      type: "separator",
+    },
+    {
+      label: "Include Images from Folders",
+      type: "checkbox",
+      checked: true,
+      click: (menuItem, browserWindow, modifiers) => {
+        console.log(menuItem.label);
+        browserWindow.webContents.send(
+          "set-include-images-from-folders",
+          menuItem.checked,
+        );
+      },
+    },
   ],
 });
 const menu = Menu.buildFromTemplate(menuTemplate);

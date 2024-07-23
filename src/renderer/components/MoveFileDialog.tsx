@@ -9,11 +9,13 @@ import { type FileMeta } from "@renderer/types";
 import constrain from "@src/utils/constrain";
 
 export default function MoveFileDialog({
+  isOpen,
   rootPath,
   folderMetas,
   onClose,
   onSelectFolder,
 }: {
+  isOpen: boolean;
   rootPath: string;
   folderMetas: FileMeta[];
   onClose: () => unknown;
@@ -23,7 +25,7 @@ export default function MoveFileDialog({
   const currentItemRef = useRef(null);
   const [filterText, setFilterText] = useState("");
   const [selectedFolder, setSelectedFolder] = useState({
-    path: folderMetas[0].filePath,
+    path: folderMetas?.[0]?.filePath,
     exists: true,
   });
   const folderPaths = useMemo(
@@ -45,12 +47,12 @@ export default function MoveFileDialog({
         exists: false,
       },
     ],
-    [folderPaths],
+    [filterText, folderPaths],
   );
 
   useEffect(() => {
     setSelectedFolder(menuItems[0]);
-  }, [filterText, folderPaths]);
+  }, [filterText, menuItems]);
 
   const absoluteFromRelative = useCallback(
     (relativePath: string) => {
@@ -107,6 +109,14 @@ export default function MoveFileDialog({
       document.removeEventListener("keydown", arrowHandler);
     };
   });
+
+  useEffect(() => {
+    if (isOpen) {
+      inputRef.current.setSelectionRange(0, inputRef.current.selectionEnd);
+    }
+  }, [isOpen]);
+
+  if (!isOpen) return null;
 
   return (
     <div className="action-dialog">
