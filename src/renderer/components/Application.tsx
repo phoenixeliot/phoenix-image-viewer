@@ -1,5 +1,10 @@
 import FocusFolderDialog from "@components/FocusFolderDialog";
 import MoveFileDialog from "@components/MoveFileDialog";
+import {
+  CombinedEvent,
+  UncombinedEvent,
+  type FileEvent,
+} from "@main/filesystem/filesystem";
 import { FileMeta } from "@renderer/types";
 import constrain from "@src/utils/constrain";
 import "@styles/app.scss";
@@ -152,11 +157,10 @@ const Application: React.FC = () => {
       filteredFileMetas.length > 0 &&
       !filteredFileMetas.some((meta) => meta.filePath === currentImagePath)
     ) {
-      // setCurrentImagePath(null);
       if (currentDirection === "right") {
-        setCurrentImageIndex(prevImageIndex);
+        setCurrentImageIndex(constrain(prevImageIndex, numImages));
       } else {
-        setCurrentImageIndex(prevImageIndex - 1);
+        setCurrentImageIndex(constrain(prevImageIndex - 1, numImages));
       }
     }
   }, [
@@ -165,6 +169,7 @@ const Application: React.FC = () => {
     currentImagePath,
     filteredFileMetas,
     includeImagesFromFolders,
+    numImages,
     prevImageIndex,
     setCurrentImageIndex,
   ]);
@@ -293,6 +298,67 @@ const Application: React.FC = () => {
     [],
   );
 
+  const handleWatchEvents = useCallback(
+    (event: IpcRendererEvent, events: FileEvent[]) => {
+      // Update paths when files got moved outside this app
+      const unlinkedPaths = new Set(
+        events
+          .filter((e): e is UncombinedEvent => e.eventName === "unlink")
+          .map((e) => e.path),
+      );
+      const addedPaths = new Set(
+        events
+          .filter((e): e is UncombinedEvent => e.eventName === "add")
+          .map((e) => e.path),
+      );
+      const changedPaths = Object.fromEntries(
+        events
+          .filter((e): e is CombinedEvent => e.eventName === "rename")
+          .map((e) => [e.oldPath, e.newPath]),
+      );
+      if (changedPaths[currentImagePath])
+        setCurrentImagePath(changedPaths[currentImagePath]);
+      setFileMetas((fileMetas) => {
+        return fileMetas
+          .map((fileMeta) => {
+            return changedPaths[fileMeta.filePath]
+              ? { ...fileMeta, filePath: changedPaths[fileMeta.filePath] }
+              : fileMeta;
+          })
+          .filter((fileMeta) => {
+            return !unlinkedPaths.has(fileMeta.filePath);
+          })
+          .concat(
+            ...Array.from(addedPaths).map((path) => ({
+              filePath: path,
+              lastModified: new Date(),
+            })),
+          );
+      });
+      setFolderMetas((folderMetas) => {
+        const changedPaths = Object.fromEntries(
+          events
+            .filter(
+              (event): event is CombinedEvent =>
+                event.eventName === "renameDir",
+            )
+            .map((event) => [event.oldPath, event.newPath]),
+        );
+        return folderMetas.map((folderMeta) => {
+          return changedPaths[folderMeta.filePath]
+            ? { ...folderMeta, filePath: changedPaths[folderMeta.filePath] }
+            : folderMeta;
+        });
+      });
+      // For every rename, change the path in the list of paths. Make sure not to break if we moved it from inside the app.
+      // For every add, add it to the list of paths
+      // For every unlink, remove it
+      // Also process folder adds/removes
+      // If one of the files moved is the one were were looking at, update currentImagePath
+    },
+    [currentImagePath],
+  );
+
   useEffect(() => {
     const events = [
       ["go-to-next-random-image", goToNextRandomImage],
@@ -302,6 +368,7 @@ const Application: React.FC = () => {
       ["open-files", openFiles],
       ["open-move-file-dialog", openMoveFileDialog],
       ["open-focus-folder-dialog", openFocusFolderDialog],
+      ["watch-events", handleWatchEvents],
       [
         "set-sort-order",
         (event: IpcRendererEvent, order: string) => setSortOrder(order),
@@ -331,6 +398,7 @@ const Application: React.FC = () => {
     openFiles,
     openMoveFileDialog,
     openFocusFolderDialog,
+    handleWatchEvents,
   ]);
 
   // images: 0 1 2 3 4

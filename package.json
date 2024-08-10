@@ -78,6 +78,7 @@
     "webpack": "^5.92.1"
   },
   "dependencies": {
+    "chokidar": "^3.6.0",
     "electron-default-menu": "^1.0.2",
     "electron-settings": "^4.0.4",
     "electron-squirrel-startup": "^1.0.1",

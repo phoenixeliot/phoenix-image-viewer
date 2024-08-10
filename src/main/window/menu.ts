@@ -2,7 +2,7 @@ import { Menu, app, dialog, shell } from "electron";
 import getDefaultMenuTemplate from "electron-default-menu";
 import settings from "electron-settings";
 import fs from "fs";
-import { getImagePaths } from "../filesystem/filesystem";
+import { getImagePaths, watchFolder } from "../filesystem/filesystem";
 
 const menuTemplate = getDefaultMenuTemplate(app, shell);
 menuTemplate.splice(1, 0, {
@@ -41,6 +41,10 @@ menuTemplate.splice(1, 0, {
           rootPath: rootPath,
           folderMetas,
           fileMetas,
+        });
+        watchFolder(rootPath, (events) => {
+          console.log("Got events", { events: events.slice(0, 3) });
+          browserWindow.webContents.send("watch-events", events);
         });
       },
     },
