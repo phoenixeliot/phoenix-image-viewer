@@ -392,33 +392,35 @@ const Application: React.FC = () => {
 
   return (
     <>
-      <MoveFileDialog
-        isOpen={showFileMoveDialog}
-        rootPath={rootPath}
-        folderMetas={folderMetas}
-        onClose={() => setShowFileMoveDialog(false)}
-        onSelectFolder={(destFolder) => {
-          // TODO: Localize paths in Windows
-          const pathChunks = currentImagePath.split("/");
-          const baseName = pathChunks.slice(0, -1).join("/");
-          const fileName = pathChunks.at(-1);
-          const newPath = destFolder.replace(/\/?$/, "/") + fileName;
-          if (
-            !folderMetas.some(
-              (folderMeta) => folderMeta.filePath === destFolder,
-            )
-          ) {
-            setFolderMetas([
-              ...folderMetas,
-              {
-                filePath: destFolder,
-                lastModified: new Date(),
-              },
-            ]);
-          }
-          moveFile({ from: currentImagePath, to: newPath });
-        }}
-      />
+      {rootPath && folderMetas && (
+        <MoveFileDialog
+          isOpen={showFileMoveDialog}
+          rootPath={rootPath}
+          folderMetas={folderMetas}
+          onClose={() => setShowFileMoveDialog(false)}
+          onSelectFolder={(destFolder) => {
+            // TODO: Localize paths in Windows
+            const pathChunks = currentImagePath.split("/");
+            const baseName = pathChunks.slice(0, -1).join("/");
+            const fileName = pathChunks.at(-1);
+            const newPath = destFolder.replace(/\/?$/, "/") + fileName;
+            if (
+              !folderMetas.some(
+                (folderMeta) => folderMeta.filePath === destFolder,
+              )
+            ) {
+              setFolderMetas([
+                ...folderMetas,
+                {
+                  filePath: destFolder,
+                  lastModified: new Date(),
+                },
+              ]);
+            }
+            moveFile({ from: currentImagePath, to: newPath });
+          }}
+        />
+      )}
       <div className="image-container">
         {currentImageUrl && videoFormats.includes(currentImageExtension) ? (
           <video

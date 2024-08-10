@@ -1,13 +1,7 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import ActionDialog from "@components/ActionDialog";
 import { type FileMeta } from "@renderer/types";
-import constrain from "@src/utils/constrain";
-import { levenshteinDistance } from "string-similarity-algorithm";
+import absoluteFromRelative from "@src/utils/absoluteFromRelative";
+import React, { useMemo, useState } from "react";
 
 export default function MoveFileDialog({
   isOpen,
@@ -22,155 +16,47 @@ export default function MoveFileDialog({
   onClose: () => unknown;
   onSelectFolder: (folderPath: string) => unknown;
 }) {
-  const inputRef = useRef(null);
-  const currentItemRef = useRef(null);
   const [filterText, setFilterText] = useState("");
-  const [selectedFolder, setSelectedFolder] = useState({
-    path: folderMetas?.[0]?.filePath,
-    exists: true,
-  });
-  const folderPaths = useMemo(
+
+  const includeCreateMenuItem = useMemo(
     () =>
-      folderMetas
-        .map((folderMeta) => folderMeta.filePath.replace(rootPath, ""))
-        .filter((filePath) => filePath.includes(filterText))
-        .toSorted((a, b) => {
-          if (!filterText) return 0;
-          return (
-            levenshteinDistance(a, filterText) -
-            levenshteinDistance(b, filterText)
-          );
-        }),
+      !folderMetas.some((folderMeta) => {
+        return (
+          folderMeta.filePath === absoluteFromRelative(filterText, rootPath)
+        );
+      }),
     [filterText, folderMetas, rootPath],
   );
 
   const menuItems = useMemo(
     () => [
-      ...folderPaths.map((folderPath) => ({
-        path: folderPath,
+      ...folderMetas.map((folderMeta) => ({
+        text: folderMeta.filePath.replace(rootPath, ""),
+        path: folderMeta.filePath,
         exists: true,
       })),
-      {
-        path: filterText,
-        exists: false,
-      },
+      ...(includeCreateMenuItem
+        ? [
+            {
+              text: `Create folder: /${filterText}`,
+              path: absoluteFromRelative(filterText, rootPath),
+              exists: false,
+            },
+          ]
+        : []),
     ],
-    [filterText, folderPaths],
+    [filterText, folderMetas, includeCreateMenuItem, rootPath],
   );
-
-  useEffect(() => {
-    setSelectedFolder(menuItems[0]);
-  }, [filterText, menuItems]);
-
-  const absoluteFromRelative = useCallback(
-    (relativePath: string) => {
-      return (
-        rootPath.replace(/\/*$/, "") + "/" + relativePath.replace(/^\/*/, "")
-      );
-    },
-    [rootPath],
-  );
-
-  useEffect(() => {
-    if (!isOpen) return;
-    const arrowHandler = (e: KeyboardEvent) => {
-      if (e.key === "ArrowUp") {
-        e.preventDefault();
-        setSelectedFolder(
-          menuItems[
-            constrain(
-              menuItems.findIndex(({ path }) => selectedFolder.path === path) -
-                1,
-              menuItems.length,
-            )
-          ],
-        );
-        setTimeout(() => {
-          currentItemRef.current?.scrollIntoView({ block: "nearest" });
-        });
-      } else if (e.key === "ArrowDown") {
-        e.preventDefault();
-        setSelectedFolder(
-          menuItems[
-            constrain(
-              menuItems.findIndex(({ path }) => selectedFolder.path === path) +
-                1,
-              menuItems.length,
-            )
-          ],
-        );
-        setTimeout(() => {
-          currentItemRef.current?.scrollIntoView({ block: "nearest" });
-        });
-      } else if (e.key === "Escape") {
-        e.preventDefault();
-        onClose();
-      } else if (e.key === "Enter") {
-        e.preventDefault();
-        onClose();
-        onSelectFolder(absoluteFromRelative(selectedFolder.path));
-      }
-    };
-    document.addEventListener("keydown", arrowHandler);
-    document.addEventListener("keydown", arrowHandler);
-    return () => {
-      document.removeEventListener("keydown", arrowHandler);
-      document.removeEventListener("keydown", arrowHandler);
-    };
-  });
-
-  useEffect(() => {
-    if (isOpen) {
-      inputRef.current.setSelectionRange(0, inputRef.current.selectionEnd);
-    }
-  }, [isOpen]);
-
-  if (!isOpen) return null;
 
   return (
-    <div className="action-dialog">
-      <div className="action-dialog__header">
-        <input
-          ref={inputRef}
-          className="action-dialog__input"
-          autoFocus
-          value={filterText}
-          onChange={(e) => setFilterText(e.target.value)}
-          onBlur={() => inputRef.current.focus()}
-        />
-      </div>
-      <div className="action-dialog__list">
-        {folderPaths.map((folderPath) => {
-          const parts = folderPath.split("/");
-          const folderName = parts.at(-1);
-          const isSelected = selectedFolder.path === folderPath;
-          return (
-            <div
-              key={folderPath}
-              ref={isSelected ? currentItemRef : null}
-              className={`action-dialog__list-item ${isSelected ? "action-dialog__list-item_selected" : ""}`}
-              onClick={() => onSelectFolder(absoluteFromRelative(folderPath))}
-            >
-              {folderPath}
-            </div>
-          );
-        })}
-        {(() => {
-          const folderPath = filterText;
-          const parts = folderPath.split("/");
-          const folderName = parts.at(-1);
-          const isSelected = selectedFolder.path === folderPath;
-          return (
-            <div
-              ref={isSelected ? currentItemRef : null}
-              className={`action-dialog__list-item ${isSelected ? "action-dialog__list-item_selected" : ""}`}
-              onClick={() => onSelectFolder(absoluteFromRelative(folderPath))}
-            >
-              Create folder: {folderName}
-            </div>
-          );
-        })()}
-      </div>
-    </div>
+    <ActionDialog
+      isOpen={isOpen}
+      onClose={onClose}
+      menuItems={menuItems}
+      onChangeFilterText={setFilterText}
+      onSelect={(menuItem) => {
+        onSelectFolder(menuItem.path);
+      }}
+    />
   );
 }
