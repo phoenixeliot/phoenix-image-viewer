@@ -7,6 +7,7 @@ import React, {
 } from "react";
 import { type FileMeta } from "@renderer/types";
 import constrain from "@src/utils/constrain";
+import { levenshteinDistance } from "string-similarity-algorithm";
 
 export default function MoveFileDialog({
   isOpen,
@@ -32,7 +33,14 @@ export default function MoveFileDialog({
     () =>
       folderMetas
         .map((folderMeta) => folderMeta.filePath.replace(rootPath, ""))
-        .filter((filePath) => filePath.includes(filterText)),
+        .filter((filePath) => filePath.includes(filterText))
+        .toSorted((a, b) => {
+          if (!filterText) return 0;
+          return (
+            levenshteinDistance(a, filterText) -
+            levenshteinDistance(b, filterText)
+          );
+        }),
     [filterText, folderMetas, rootPath],
   );
 

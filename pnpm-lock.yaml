@@ -20,6 +20,9 @@ dependencies:
   react-dom:
     specifier: ^18.3.1
     version: 18.3.1(react@18.3.1)
+  string-similarity-algorithm:
+    specifier: ^1.1.0
+    version: 1.1.0
 
 devDependencies:
   '@electron-forge/cli':
@@ -4180,6 +4183,10 @@ packages:
       set-function-name: 2.0.2
     dev: true
 
+  /jenkins-hash-lookup3@1.0.0:
+    resolution: {integrity: sha512-JswqF3V3H2GJ38iDuLrqpFCFDAilbcBXQ++voW5fV75KkuQbh9rIYexK3edW9pMGHG/b61VxtlH3uqcBc9QKyg==}
+    dev: false
+
   /jest-worker@27.5.1:
     resolution: {integrity: sha512-7vuh85V5cdDofPyxn58nrPjBktZo0u9x1g8WtjQol+jZDaE+fhN+cIvTj11GndBnMnyfrUOG1sZQxCdjKh+DKg==}
     engines: {node: '>= 10.13.0'}
@@ -6036,6 +6043,12 @@ packages:
     resolution: {integrity: sha512-RwNA9Z/7PrK06rYLIzFMlaF+l73iwpzsqRIFgbMLbTcLD6cOao82TaWefPXQvB2fOC4AjuYSEndS7N/mTCbkdQ==}
     engines: {node: '>= 0.8'}
     dev: true
+
+  /string-similarity-algorithm@1.1.0:
+    resolution: {integrity: sha512-1Fwvz9xEVUb5RaCHptwoyKAy6BBDWxQ/sYDIo65hZqfq0Uq1Bqz0noVS60PUQ57SsgB5qBHVwGe5V9on2D2LbQ==}
+    dependencies:
+      jenkins-hash-lookup3: 1.0.0
+    dev: false
 
   /string-width@4.2.3:
     resolution: {integrity: sha512-wKyQRQpjJ0sIp62ErSZdGsjMJWsap5oRNihHhu6G7JVO/9jIB6UyevL+tXuOqrng8j/cxKTWyWUwvSTriiZz/g==}
