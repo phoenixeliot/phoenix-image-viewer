@@ -40,6 +40,7 @@ const Application: React.FC = () => {
   const [prevImageIndex, setPrevImageIndex] = useState(0);
   const videoRef = useRef(null);
   const activeElement = useActiveElement();
+  const [currentDirection, setCurrentDirection] = useState("right");
 
   const originalFilePaths = useMemo(
     () => fileMetas.map((fileMeta) => fileMeta.filePath),
@@ -92,17 +93,12 @@ const Application: React.FC = () => {
         if (!fileMeta.filePath.match(filterRegex)) return false;
       }
       if (!includeImagesFromFolders) {
-        console.log({
-          fileMeta,
-          relative: fileMeta.filePath.replace(rootPath, "").replace(/^\/*/, ""),
-        });
         if (
           fileMeta.filePath
             .replace(rootPath, "")
             .replace(/^\/*/, "")
             .includes("/")
         ) {
-          console.log("Filtering out path:", fileMeta.filePath);
           return false;
         }
       }
@@ -150,9 +146,14 @@ const Application: React.FC = () => {
       !filteredFileMetas.some((meta) => meta.filePath === currentImagePath)
     ) {
       // setCurrentImagePath(null);
-      setCurrentImageIndex(prevImageIndex);
+      if (currentDirection === "right") {
+        setCurrentImageIndex(prevImageIndex);
+      } else {
+        setCurrentImageIndex(prevImageIndex - 1);
+      }
     }
   }, [
+    currentDirection,
     currentImageIndex,
     currentImagePath,
     filteredFileMetas,
@@ -203,12 +204,14 @@ const Application: React.FC = () => {
     if (numImages === 0) return;
     const newImageIndex = constrainIndex(currentImageIndex + 1);
     setCurrentImageIndex(newImageIndex);
+    setCurrentDirection("right");
   }, [constrainIndex, currentImageIndex, numImages, setCurrentImageIndex]);
 
   const goToPrevImage = useCallback(() => {
     if (numImages === 0) return;
     const newImageIndex = constrainIndex(currentImageIndex + numImages - 1);
     setCurrentImageIndex(newImageIndex);
+    setCurrentDirection("left");
   }, [constrainIndex, currentImageIndex, numImages, setCurrentImageIndex]);
 
   const goToNextRandomImage = useCallback(() => {
@@ -264,6 +267,7 @@ const Application: React.FC = () => {
         to,
       });
       console.log(`Moving ${from} to ${newPath}`);
+      console.log("newPath = to?", newPath === to);
       setFileMetas((metas) =>
         metas.map((meta) =>
           meta.filePath === from
