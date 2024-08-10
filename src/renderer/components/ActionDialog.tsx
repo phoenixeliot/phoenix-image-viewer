@@ -19,7 +19,7 @@ export default function ActionDialog({
   isOpen: boolean;
   menuItems: MenuItem[];
   onClose: () => unknown;
-  onChangeFilterText: (filterText: string) => unknown;
+  onChangeFilterText?: (filterText: string) => unknown;
   onSelect: (menuItem: MenuItem) => unknown;
 }) {
   const inputRef = useRef(null);
@@ -30,7 +30,7 @@ export default function ActionDialog({
   const setFilterText = useCallback(
     (value: string) => {
       _setFilterText(value);
-      onChangeFilterText(value);
+      onChangeFilterText?.(value);
     },
     [onChangeFilterText],
   );

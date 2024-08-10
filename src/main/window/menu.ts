@@ -58,9 +58,16 @@ menuTemplate.splice(1, 0, {
     },
     {
       accelerator: "Option+M", // TODO: Add windows shortcut
-      label: "Move file...", // TODO: Localize windows text
+      label: "Move file...",
       click: async (menuItem, browserWindow, modifiers) => {
         browserWindow.webContents.send("open-move-file-dialog");
+      },
+    },
+    {
+      accelerator: "Option+F", // TODO: Add windows shortcut
+      label: "Focus folder...",
+      click: async (menuItem, browserWindow, modifiers) => {
+        browserWindow.webContents.send("open-focus-folder-dialog");
       },
     },
   ],
@@ -133,6 +140,7 @@ menuTemplate.splice(3, 0, {
     // {
     //   label: "Order by File Size",
     //   type: "radio",
+
     //   click: (menuItem, browserWindow, modifiers) => {
     //     console.log(menuItem.label);
     //     browserWindow.webContents.send("set-sort-order", "file-size");

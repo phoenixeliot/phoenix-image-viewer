@@ -1,3 +1,4 @@
+import FocusFolderDialog from "@components/FocusFolderDialog";
 import MoveFileDialog from "@components/MoveFileDialog";
 import { FileMeta } from "@renderer/types";
 import constrain from "@src/utils/constrain";
@@ -24,7 +25,8 @@ const Application: React.FC = () => {
   const [counter, setCounter] = useState(0);
   const [darkTheme, setDarkTheme] = useState(true);
   const [versions, setVersions] = useState<Record<string, string>>({});
-  const [rootPath, setRootPath] = useState<string>(null);
+  const [rootPath, setRootPath] = useState<string | null>(null);
+  const [focusFolder, setFocusFolder] = useState<string | null>(null);
   const [folderMetas, setFolderMetas] = useState<FileMeta[]>([]);
   const [fileMetas, setFileMetas] = useState<FileMeta[]>([]);
   const [currentImagePath, setCurrentImagePath] = useState(
@@ -37,6 +39,7 @@ const Application: React.FC = () => {
   const [sortOrder, setSortOrder] = useState("name");
   const [filterRegex, setFilterRegex] = useState("");
   const [showFileMoveDialog, setShowFileMoveDialog] = useState(false);
+  const [showFocusFolderDialog, setShowFocusFolderDialog] = useState(false);
   const [prevImageIndex, setPrevImageIndex] = useState(0);
   const videoRef = useRef(null);
   const activeElement = useActiveElement();
@@ -86,6 +89,9 @@ const Application: React.FC = () => {
     return sortedFileMetas.filter((fileMeta) => {
       const filename = fileMeta.filePath.split("/").at(-1);
       const extension = filename.split(".").at(-1).toLowerCase();
+      if (focusFolder) {
+        if (!fileMeta.filePath.startsWith(focusFolder)) return false;
+      }
       if (fileExtensionFilter) {
         if (extension != fileExtensionFilter) return false;
       }
@@ -107,6 +113,7 @@ const Application: React.FC = () => {
   }, [
     fileExtensionFilter,
     filterRegex,
+    focusFolder,
     includeImagesFromFolders,
     rootPath,
     sortedFileMetas,
@@ -258,6 +265,9 @@ const Application: React.FC = () => {
   const openMoveFileDialog = useCallback((event: IpcRendererEvent) => {
     setShowFileMoveDialog(true);
   }, []);
+  const openFocusFolderDialog = useCallback((event: IpcRendererEvent) => {
+    setShowFocusFolderDialog(true);
+  }, []);
 
   const moveFile = useCallback(
     async ({ from, to }: { from: string; to: string }) => {
@@ -291,6 +301,7 @@ const Application: React.FC = () => {
       ["go-to-prev-image", goToPrevImage],
       ["open-files", openFiles],
       ["open-move-file-dialog", openMoveFileDialog],
+      ["open-focus-folder-dialog", openFocusFolderDialog],
       [
         "set-sort-order",
         (event: IpcRendererEvent, order: string) => setSortOrder(order),
@@ -319,6 +330,7 @@ const Application: React.FC = () => {
     goToPrevRandomImage,
     openFiles,
     openMoveFileDialog,
+    openFocusFolderDialog,
   ]);
 
   // images: 0 1 2 3 4
@@ -373,22 +385,15 @@ const Application: React.FC = () => {
   useEffect(() => {
     window.ipcRenderer.invoke("setBrowseState", {
       currentImagePath,
+      rootPath,
+      focusFolder,
     });
-  }, [currentImagePath]);
+  }, [currentImagePath, focusFolder, rootPath]);
 
   // If filtering reduced the max to below the current index, jump back to 0
-  useEffect(() => {
-    if (currentImageIndex > numImages) {
-      setCurrentImageIndex(0);
-      // setRandomImageIndex(randomIndexMap[0]);
-    }
-  }, [
-    currentImageIndex,
-    numImages,
-    randomImageIndex,
-    randomIndexMap,
-    setCurrentImageIndex,
-  ]);
+  if (currentImageIndex > numImages) {
+    setCurrentImageIndex(0);
+  }
 
   return (
     <>
@@ -419,6 +424,15 @@ const Application: React.FC = () => {
             }
             moveFile({ from: currentImagePath, to: newPath });
           }}
+        />
+      )}
+      {rootPath && folderMetas && (
+        <FocusFolderDialog
+          isOpen={showFocusFolderDialog}
+          rootPath={rootPath}
+          folderMetas={folderMetas}
+          onClose={() => setShowFocusFolderDialog(false)}
+          onSelectFolder={(destFolder) => setFocusFolder(destFolder)}
         />
       )}
       <div className="image-container">
