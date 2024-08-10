@@ -72,6 +72,7 @@ export default function MoveFileDialog({
   );
 
   useEffect(() => {
+    if (!isOpen) return;
     const arrowHandler = (e: KeyboardEvent) => {
       if (e.key === "ArrowUp") {
         e.preventDefault();
