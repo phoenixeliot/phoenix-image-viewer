@@ -152,7 +152,7 @@ export async function watchFolder(
     const unlinkDirs = events.filter(
       (event) => event.eventName === "unlinkDir",
     );
-    if (adds.length === unlinks.length) {
+    if (addDirs.length === unlinkDirs.length) {
       let dirRenames = [];
       addDirs.sort((a, b) => a.path.localeCompare(b.path));
       unlinkDirs.sort((a, b) => a.path.localeCompare(b.path));
