@@ -544,7 +544,16 @@ const Application: React.FC = () => {
         <span>
           Random index: {randomImageIndex + 1}/{filteredFileMetas.length}
         </span>
-        <div style={{ backgroundColor: "black" }}>{currentImagePath}</div>
+        <div
+          style={{
+            backgroundColor: "black",
+            whiteSpace: "nowrap",
+            overflowX: "hidden",
+            textOverflow: "ellipsis",
+          }}
+        >
+          {currentImagePath}
+        </div>
       </div>
     </>
   );
