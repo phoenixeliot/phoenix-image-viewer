@@ -10,6 +10,7 @@ import constrain from "@src/utils/constrain";
 import "@styles/app.scss";
 import { type ipcRenderer, type IpcRendererEvent } from "electron";
 import React, {
+  ImgHTMLAttributes,
   useCallback,
   useEffect,
   useMemo,
@@ -515,7 +516,8 @@ const Application: React.FC = () => {
             onPlay={() => videoRef.current.focus()}
           />
         ) : (
-          <img className="image" src={currentImageUrl} />
+          <ImageElement className="image" src={currentImageUrl} />
+          // <img key={currentImageUrl} className="image" src={currentImageUrl} />
         )}
       </div>
       <div className="status-bar">
@@ -558,6 +560,15 @@ const Application: React.FC = () => {
     </>
   );
 };
+
+// Trying to prevent gifs and videos from restarting when moved. Not working because the image path changes. Needs some additional workaround to avoid changing the path while viewing it?
+const ImageElement = React.memo<ImgHTMLAttributes<HTMLImageElement>>(
+  ({ ...attributes }) => {
+    console.log("Re-rendering image!");
+    return <img {...attributes} />;
+  },
+);
+ImageElement.displayName = "ImageElement";
 
 // https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
 const videoFormats = ["avi", "mp4", "mpeg", "ogv", "ts", "webm", "3gp", "3g2"];
