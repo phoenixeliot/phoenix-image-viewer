@@ -178,11 +178,11 @@ const Application: React.FC = () => {
   // Shuffle the indexes so we can map them
   const shuffledIndexes = useMemo(() => {
     const unshuffled = [];
-    for (let i = 0; i < numImages; i++) {
+    for (let i = 1; i < numImages; i++) {
       unshuffled.push(i);
     }
-    const shuffled = [];
-    for (let i = 0; i < numImages; i++) {
+    const shuffled = [0]; // Always start with image 0 at random index 0 as well
+    for (let i = 1; i < numImages; i++) {
       const item = unshuffled.splice(
         Math.floor(Math.random() * unshuffled.length),
         1,
@@ -201,9 +201,20 @@ const Application: React.FC = () => {
     return map;
   }, [shuffledIndexes]);
 
+  // Map from [random image index -> regular index]
+  const reverseRandomIndexMap = useMemo(() => {
+    return Object.fromEntries(
+      Object.entries(randomIndexMap).map(([key, value]) => [
+        value,
+        Number(key),
+      ]),
+    );
+  }, [randomIndexMap]);
+  console.log({ shuffledIndexes, randomIndexMap, reverseRandomIndexMap });
+
   // Map from [index -> random previous image index]
   // This allows going backwards in the random order
-  const reverseRandomIndexMap = useMemo(() => {
+  const prevRandomIndexMap = useMemo(() => {
     const map: Record<number, number> = {};
     shuffledIndexes.forEach((cur, prev) => {
       map[cur] = prev;
@@ -211,7 +222,7 @@ const Application: React.FC = () => {
     return map;
   }, [shuffledIndexes]);
 
-  const randomImageIndex = reverseRandomIndexMap[currentImageIndex];
+  const randomImageIndex = randomIndexMap[currentImageIndex];
 
   const goToNextImage = useCallback(() => {
     if (numImages === 0) return;
@@ -230,24 +241,41 @@ const Application: React.FC = () => {
   const goToNextRandomImage = useCallback(() => {
     if (numImages === 0) return;
     if (activeElement.tagName === "INPUT") return; // Prevent randoming when in the search box
-    setCurrentImageIndex(randomIndexMap[currentImageIndex]);
+    // Todo: un-confuse my names of "random index" and "regular index" and what they represent
+    const randomIndex = randomIndexMap[currentImageIndex];
+    const constrained = constrainIndex(randomIndex + 1);
+    const nextImageIndex = reverseRandomIndexMap[constrained];
+    console.log({
+      currentImageIndex,
+      randomIndex,
+      constrained,
+      nextRandomImage: nextImageIndex,
+    });
+    setCurrentImageIndex(nextImageIndex);
   }, [
-    activeElement.tagName,
-    currentImageIndex,
     numImages,
+    activeElement.tagName,
     randomIndexMap,
+    constrainIndex,
+    reverseRandomIndexMap,
+    currentImageIndex,
     setCurrentImageIndex,
   ]);
 
   const goToPrevRandomImage = useCallback(() => {
     if (numImages === 0) return;
     if (activeElement.tagName === "INPUT") return; // Prevent randoming when in the search box
-    const newImageIndex = reverseRandomIndexMap[currentImageIndex];
-    setCurrentImageIndex(newImageIndex);
+    // const newImageIndex = prevRandomIndexMap[currentImageIndex];
+    const randomIndex = randomIndexMap[currentImageIndex];
+    const constrained = constrainIndex(randomIndex - 1);
+    const prevImageIndex = reverseRandomIndexMap[constrained];
+    setCurrentImageIndex(prevImageIndex);
   }, [
     activeElement.tagName,
+    constrainIndex,
     currentImageIndex,
     numImages,
+    randomIndexMap,
     reverseRandomIndexMap,
     setCurrentImageIndex,
   ]);
