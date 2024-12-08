@@ -50,6 +50,7 @@ const Application: React.FC = () => {
   const videoRef = useRef(null);
   const activeElement = useActiveElement();
   const [currentDirection, setCurrentDirection] = useState("right");
+  const [muted, setMuted] = useState(true);
 
   const originalFilePaths = useMemo(
     () => fileMetas.map((fileMeta) => fileMeta.filePath),
@@ -403,6 +404,10 @@ const Application: React.FC = () => {
         (event: IpcRendererEvent, order: string) => setSortOrder(order),
       ],
       [
+        "set-muted",
+        (event: IpcRendererEvent, muted: boolean) => setMuted(muted),
+      ],
+      [
         "set-include-images-from-folders",
         (event: IpcRendererEvent, enabled: boolean) => {
           console.log("setIncludeImagesFromFolders", enabled);
@@ -542,6 +547,7 @@ const Application: React.FC = () => {
             autoPlay
             ref={videoRef}
             onPlay={() => videoRef.current.focus()}
+            muted={muted}
           />
         ) : (
           <ImageElement className="image" src={currentImageUrl} />

@@ -1,10 +1,11 @@
-import { Menu, app, dialog, shell } from "electron";
+import { Menu, MenuItemConstructorOptions, app, dialog, shell } from "electron";
 import getDefaultMenuTemplate from "electron-default-menu";
 import settings from "electron-settings";
 import fs from "fs";
 import { getImagePaths, watchFolder } from "../filesystem/filesystem";
 
 const menuTemplate = getDefaultMenuTemplate(app, shell);
+// Add File menu to list of top level menus
 menuTemplate.splice(1, 0, {
   label: "File",
   submenu: [
@@ -76,6 +77,7 @@ menuTemplate.splice(1, 0, {
     },
   ],
 });
+// Insert Browse menu into the list of top level menus
 menuTemplate.splice(3, 0, {
   label: "Browse",
   submenu: [
@@ -120,6 +122,7 @@ menuTemplate.splice(3, 0, {
     {
       label: "Order by File Name",
       type: "radio",
+      checked: true,
       click: (menuItem, browserWindow, modifiers) => {
         console.log(menuItem.label);
         browserWindow.webContents.send("set-sort-order", "name");
@@ -166,6 +169,18 @@ menuTemplate.splice(3, 0, {
       },
     },
   ],
+});
+const viewMenu = menuTemplate.find((menu) => menu.label === "View");
+// Add options to View menu
+(viewMenu.submenu as MenuItemConstructorOptions[]).push({
+  label: "Mute videos",
+  accelerator: "M",
+  type: "checkbox",
+  checked: true,
+  click: (menuItem, browserWindow, modifiers) => {
+    console.log(menuItem.label);
+    browserWindow.webContents.send("set-muted", menuItem.checked);
+  },
 });
 const menu = Menu.buildFromTemplate(menuTemplate);
 
