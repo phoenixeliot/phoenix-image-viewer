@@ -40,6 +40,7 @@ export default function ActionDialog({
       menuItems
         .filter((menuItem) => menuItem.text.includes(filterText))
         .toSorted((a, b) => {
+          if (a.preventSorting || b.preventSorting) return 0;
           if (!filterText) return 0;
           return (
             levenshteinDistance(a.text, filterText) -

@@ -38,6 +38,7 @@ export default function MoveFileDialog({
       ...(includeCreateMenuItem
         ? [
             {
+              preventSorting: true,
               text: `Create folder: /${filterText}`,
               path: absoluteFromRelative(filterText, rootPath),
               exists: false,
