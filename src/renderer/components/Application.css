@@ -1,0 +1,12 @@
+.status-bar__input {
+  background: inherit;
+  color: inherit;
+  border: none;
+}
+
+/* Chrome, Safari, Edge, Opera */
+input.status-bar__input_numeric::-webkit-outer-spin-button,
+input.status-bar__input_numeric::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}

@@ -17,6 +17,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+import "./Application.css";
 
 // TODO: Figure out how to put this in a .d.ts file without it breaking everything when I import it
 declare global {
@@ -555,31 +556,51 @@ const Application: React.FC = () => {
         )}
       </div>
       <div className="status-bar">
-        <input onChange={(e) => setFilterRegex(e.target.value)} />
-        <select onChange={(e) => setFileExtensionFilter(e.target.value)}>
-          <option key={"None"} value={""}>
-            Filter extension...
-          </option>
-          {fileExtensions.map((fileExtension) => (
-            <option key={fileExtension} value={fileExtension}>
-              {fileExtension}
-            </option>
-          ))}
-        </select>
-        <span>
-          Showing image{" "}
-          <input
-            type="number"
-            onChange={(e) =>
-              setCurrentImageIndex(constrainIndex(Number(e.target.value) - 1))
-            }
-            value={currentImageIndex + 1}
-          />
-          /<span>{filteredFileMetas.length}</span>{" "}
-        </span>
-        <span>
-          Random index: {randomImageIndex + 1}/{filteredFileMetas.length}
-        </span>
+        <div style={{ display: "flex", justifyContent: "space-between" }}>
+          <div>
+            <label>
+              Filename filter:{" "}
+              <input
+                className="status-bar__input"
+                onChange={(e) => setFilterRegex(e.target.value)}
+              />
+            </label>
+            <select onChange={(e) => setFileExtensionFilter(e.target.value)}>
+              <option key={"None"} value={""}>
+                Filter extension...
+              </option>
+              {fileExtensions.map((fileExtension) => (
+                <option key={fileExtension} value={fileExtension}>
+                  {fileExtension}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <span>
+              Showing image{" "}
+              <input
+                className="status-bar__input status-bar__input_numeric"
+                style={{
+                  textAlign: "right",
+                  width: `calc(${currentImageIndex.toString().length}ex)`,
+                  fontSize: "16px",
+                }}
+                type="number"
+                onChange={(e) =>
+                  setCurrentImageIndex(
+                    constrainIndex(Number(e.target.value) - 1),
+                  )
+                }
+                value={currentImageIndex + 1}
+              />
+              /<span>{filteredFileMetas.length}</span>{" "}
+            </span>
+            <span>
+              Random index: {randomImageIndex + 1}/{filteredFileMetas.length}
+            </span>
+          </div>
+        </div>
         <div
           style={{
             backgroundColor: "black",
