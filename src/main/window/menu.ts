@@ -1,7 +1,17 @@
-import { Menu, MenuItemConstructorOptions, app, dialog, shell } from "electron";
+import { execSync } from "child_process";
+import {
+  Menu,
+  MenuItemConstructorOptions,
+  app,
+  dialog,
+  ipcMain,
+  shell,
+} from "electron";
 import getDefaultMenuTemplate from "electron-default-menu";
 import settings from "electron-settings";
 import fs from "fs";
+import os from "os";
+import path from "path";
 import { getImagePaths, watchFolder } from "../filesystem/filesystem";
 
 const menuTemplate = getDefaultMenuTemplate(app, shell);
@@ -75,6 +85,83 @@ menuTemplate.splice(1, 0, {
         browserWindow.webContents.send("open-focus-folder-dialog");
       },
     },
+    // Only include delete if it's macOS, since that's what I implemented
+    ...(process.platform === "darwin"
+      ? [
+          {
+            accelerator: "Command+Backspace", // TODO: Add windows shortcut
+            label: "Delete file",
+            click: async (menuItem, browserWindow, modifiers) => {
+              browserWindow.webContents.send("get-current-file-path");
+              ipcMain.once(
+                "get-current-file-path-reply",
+                async (event, filePath) => {
+                  if (!(filePath && fs.lstatSync(filePath).isFile())) {
+                    throw Error(
+                      `filePath must be an existing file, but was: "${filePath}"`,
+                    );
+                  }
+
+                  // find the trash folder; very incomplete, and only works on macOS
+                  function findTrashDir(startingFilePath: string) {
+                    const idOutput = execSync("id").toString();
+                    const userId = idOutput.match(/^uid=(\d+)\(/)?.[1];
+
+                    if (!userId) {
+                      throw Error("Couldn't find user ID");
+                    }
+
+                    let currentDir = startingFilePath;
+                    while (currentDir !== "/") {
+                      currentDir = path.dirname(currentDir);
+                      const possibleTrashPath = path.join(
+                        currentDir,
+                        ".Trashes",
+                        userId,
+                      );
+                      if (
+                        fs.existsSync(possibleTrashPath) &&
+                        fs.lstatSync(possibleTrashPath).isDirectory()
+                      ) {
+                        console.log(
+                          "Found the trash directory!",
+                          possibleTrashPath,
+                        );
+                        return possibleTrashPath;
+                      }
+                      console.log({ currentDir });
+                    }
+                    const homedir = os.homedir();
+                    const possibleTrashPath = path.join(homedir, ".Trashes");
+                    if (
+                      fs.existsSync(possibleTrashPath) &&
+                      fs.lstatSync(possibleTrashPath).isDirectory()
+                    ) {
+                      console.log(
+                        "Found the trash directory!",
+                        possibleTrashPath,
+                      );
+                      return possibleTrashPath;
+                    }
+
+                    return currentDir;
+                  }
+
+                  const trashDir = findTrashDir(filePath);
+
+                  const newPath = path.join(trashDir, path.basename(filePath));
+
+                  console.log({
+                    filePathToDelete: filePath,
+                    newPathInTrash: newPath,
+                  });
+                  fs.renameSync(filePath, newPath);
+                },
+              );
+            },
+          },
+        ]
+      : []),
   ],
 });
 // Insert Browse menu into the list of top level menus

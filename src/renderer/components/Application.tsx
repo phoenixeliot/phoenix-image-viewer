@@ -399,6 +399,14 @@ const Application: React.FC = () => {
       ["open-files", openFiles],
       ["open-move-file-dialog", openMoveFileDialog],
       ["open-focus-folder-dialog", openFocusFolderDialog],
+      [
+        "get-current-file-path",
+        () =>
+          window.ipcRenderer.send(
+            "get-current-file-path-reply",
+            currentImagePath,
+          ),
+      ],
       ["watch-events", handleWatchEvents],
       [
         "set-sort-order",
@@ -434,6 +442,7 @@ const Application: React.FC = () => {
     openMoveFileDialog,
     openFocusFolderDialog,
     handleWatchEvents,
+    currentImagePath,
   ]);
 
   // images: 0 1 2 3 4

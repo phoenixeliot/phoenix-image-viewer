@@ -31,6 +31,9 @@ contextBridge.exposeInMainWorld("ipcRenderer", {
   removeAllListeners: (name: string) => {
     ipcRenderer.removeAllListeners(name);
   },
+  send: (name: string, ...args: any[]) => {
+    return ipcRenderer.send(name, ...args);
+  },
   invoke: (name: string, ...args: any[]) => {
     return ipcRenderer.invoke(name, ...args);
   },
