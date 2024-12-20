@@ -38,13 +38,18 @@ export default function ActionDialog({
   const filteredMenuItems = useMemo(
     () =>
       menuItems
-        .filter((menuItem) => menuItem.text.includes(filterText))
+        .filter((menuItem) =>
+          menuItem.text.toLowerCase().includes(filterText.toLowerCase()),
+        )
         .toSorted((a, b) => {
           if (a.preventSorting || b.preventSorting) return 0;
           if (!filterText) return 0;
           return (
-            levenshteinDistance(a.text, filterText) -
-            levenshteinDistance(b.text, filterText)
+            levenshteinDistance(
+              a.text.toLowerCase(),
+              filterText.toLowerCase(),
+            ) -
+            levenshteinDistance(b.text.toLowerCase(), filterText.toLowerCase())
           );
         }),
     [filterText, menuItems],
