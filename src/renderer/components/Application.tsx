@@ -104,7 +104,11 @@ const Application: React.FC = () => {
         if (extension != fileExtensionFilter) return false;
       }
       if (filterRegex) {
-        if (!fileMeta.filePath.match(filterRegex)) return false;
+        try {
+          if (!fileMeta.filePath.match(filterRegex)) return false;
+        } catch (e) {
+          console.error(e);
+        }
       }
       if (!includeImagesFromFolders) {
         if (
