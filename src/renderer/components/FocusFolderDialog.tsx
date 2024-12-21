@@ -17,6 +17,7 @@ export default function FocusFolderDialog({
 }) {
   const menuItems = useMemo(
     () => [
+      { text: "/", rootPath },
       ...folderMetas.map((folderMeta) => ({
         text: folderMeta.filePath.replace(rootPath, ""),
         path: folderMeta.filePath,
