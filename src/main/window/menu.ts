@@ -87,7 +87,7 @@ menuTemplate.splice(1, 0, {
     },
     // Only include delete if it's macOS, since that's what I implemented
     ...(process.platform === "darwin"
-      ? [
+      ? ([
           {
             accelerator: "Command+Backspace", // TODO: Add windows shortcut
             label: "Delete file",
@@ -160,7 +160,7 @@ menuTemplate.splice(1, 0, {
               );
             },
           },
-        ]
+        ] as Electron.MenuItemConstructorOptions[])
       : []),
   ],
 });
