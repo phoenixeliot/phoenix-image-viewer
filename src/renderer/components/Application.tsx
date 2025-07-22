@@ -105,7 +105,8 @@ const Application: React.FC = () => {
       }
       if (filterRegex) {
         try {
-          if (!fileMeta.filePath.match(filterRegex)) return false;
+          if (!fileMeta.filePath.match(new RegExp(filterRegex, "i")))
+            return false;
         } catch (e) {
           console.error(e);
         }
