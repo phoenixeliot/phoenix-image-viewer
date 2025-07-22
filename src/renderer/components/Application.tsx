@@ -308,6 +308,23 @@ const Application: React.FC = () => {
   const openFocusFolderDialog = useCallback((event: IpcRendererEvent) => {
     setShowFocusFolderDialog(true);
   }, []);
+  const focusFilterInput = useCallback((event: IpcRendererEvent) => {
+    const filterInput = document.querySelector(
+      ".status-bar__input",
+    ) as HTMLInputElement;
+    filterInput.focus();
+    filterInput.select();
+  }, []);
+  useEffect(() => {
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        const filterInput = document.querySelector(
+          ".status-bar__input",
+        ) as HTMLInputElement;
+        filterInput.blur();
+      }
+    });
+  }, []);
 
   const moveFile = useCallback(
     async ({ from, to }: { from: string; to: string }) => {
@@ -403,6 +420,7 @@ const Application: React.FC = () => {
       ["open-files", openFiles],
       ["open-move-file-dialog", openMoveFileDialog],
       ["open-focus-folder-dialog", openFocusFolderDialog],
+      ["focus-filter-input", focusFilterInput],
       [
         "get-current-file-path",
         () =>

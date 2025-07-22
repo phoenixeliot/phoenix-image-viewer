@@ -85,6 +85,13 @@ menuTemplate.splice(1, 0, {
         browserWindow.webContents.send("open-focus-folder-dialog");
       },
     },
+    {
+      accelerator: "Command+F", // TODO: Add windows shortcut
+      label: "Filter...",
+      click: async (menuItem, browserWindow, modifiers) => {
+        browserWindow.webContents.send("focus-filter-input");
+      },
+    },
     // Only include delete if it's macOS, since that's what I implemented
     ...(process.platform === "darwin"
       ? ([
