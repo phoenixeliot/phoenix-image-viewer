@@ -466,6 +466,7 @@ const Application: React.FC = () => {
     openFocusFolderDialog,
     handleWatchEvents,
     currentImagePath,
+    focusFilterInput,
   ]);
 
   // images: 0 1 2 3 4
