@@ -78,10 +78,15 @@ const Application: React.FC = () => {
           const aDate = a.lastModified.getTime();
           const bDate = b.lastModified.getTime();
           return aDate > bDate ? -1 : aDate < bDate ? 1 : 0;
-          // TODO: File size
         } else if (sortOrder === "path") {
-          // Name is the default
           return a.filePath.localeCompare(b.filePath);
+        } else if (sortOrder === "folder-then-last-modified") {
+          const aFolder = a.filePath.split("/").slice(0, -1).join("/");
+          const bFolder = b.filePath.split("/").slice(0, -1).join("/");
+          if (aFolder != bFolder) return aFolder.localeCompare(bFolder);
+          const aDate = a.lastModified.getTime();
+          const bDate = b.lastModified.getTime();
+          return aDate > bDate ? -1 : aDate < bDate ? 1 : 0;
         } else {
           // Name is the default
           return a.filePath

@@ -238,6 +238,17 @@ menuTemplate.splice(3, 0, {
         browserWindow.webContents.send("set-sort-order", "last-modified");
       },
     },
+    {
+      label: "Order by Folder + Modification date",
+      type: "radio",
+      click: (menuItem, browserWindow, modifiers) => {
+        console.log(menuItem.label);
+        browserWindow.webContents.send(
+          "set-sort-order",
+          "folder-then-last-modified",
+        );
+      },
+    },
     // {
     //   label: "Order by File Size",
     //   type: "radio",
