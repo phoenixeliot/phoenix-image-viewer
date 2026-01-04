@@ -1,5 +1,6 @@
 {
-  "name": "image-viewer",
+  "name": "phoenix-image-viewer",
+  "productName": "Phoenix Image Viewer",
   "version": "1.0.0",
   "description": "",
   "main": ".webpack/main",
