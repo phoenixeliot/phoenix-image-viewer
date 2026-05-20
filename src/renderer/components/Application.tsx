@@ -43,7 +43,6 @@ const Application: React.FC = () => {
   const [fileExtensionFilter, setFileExtensionFilter] = useState("");
   const [includeImagesFromFolders, setIncludeImagesFromFolders] =
     useState(true);
-  const [sortOrder, setSortOrder] = useState("name");
   const [filterRegex, setFilterRegex] = useState("");
   const [showFileMoveDialog, setShowFileMoveDialog] = useState(false);
   const [showFocusFolderDialog, setShowFocusFolderDialog] = useState(false);
@@ -52,6 +51,19 @@ const Application: React.FC = () => {
   const activeElement = useActiveElement();
   const [currentDirection, setCurrentDirection] = useState("right");
   const [muted, setMuted] = useState(true);
+
+  const [sortOrder, setSortOrder] = useState("name"); // Overwritten when we load settings async just below
+
+  // Load settings
+  window.ipcRenderer
+    .invoke("getSettings", {
+      currentImagePath,
+      rootPath,
+      focusFolder,
+    })
+    .then((settings) => {
+      setSortOrder(settings.sortOrder);
+    });
 
   const originalFilePaths = useMemo(
     () => fileMetas.map((fileMeta) => fileMeta.filePath),

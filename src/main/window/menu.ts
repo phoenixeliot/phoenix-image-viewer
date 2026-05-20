@@ -14,6 +14,10 @@ import os from "os";
 import path from "path";
 import { getImagePaths, watchFolder } from "../filesystem/filesystem";
 
+// Load settings
+console.debug("sortOrder:", settings.getSync("sortOrder"));
+const sortOrder = settings.getSync("sortOrder") || "name";
+
 const menuTemplate = getDefaultMenuTemplate(app, shell);
 // Add File menu to list of top level menus
 menuTemplate.splice(1, 0, {
@@ -216,37 +220,44 @@ menuTemplate.splice(3, 0, {
     {
       label: "Order by File Name",
       type: "radio",
-      checked: true,
+      checked: sortOrder === "name",
       click: (menuItem, browserWindow, modifiers) => {
         console.debug("Activated menu item:", menuItem.label);
         browserWindow.webContents.send("set-sort-order", "name");
+        settings.setSync("sortOrder", "name");
       },
     },
     {
       label: "Order by Folder + File Name",
       type: "radio",
+      checked: sortOrder === "path",
       click: (menuItem, browserWindow, modifiers) => {
         console.debug("Activated menu item:", menuItem.label);
         browserWindow.webContents.send("set-sort-order", "path");
+        settings.setSync("sortOrder", "path");
       },
     },
     {
       label: "Order by Modification date",
       type: "radio",
+      checked: sortOrder === "last-modified",
       click: (menuItem, browserWindow, modifiers) => {
         console.debug("Activated menu item:", menuItem.label);
         browserWindow.webContents.send("set-sort-order", "last-modified");
+        settings.setSync("sortOrder", "last-modified");
       },
     },
     {
       label: "Order by Folder + Modification date",
       type: "radio",
+      checked: sortOrder === "folder-then-last-modified",
       click: (menuItem, browserWindow, modifiers) => {
         console.debug("Activated menu item:", menuItem.label);
         browserWindow.webContents.send(
           "set-sort-order",
           "folder-then-last-modified",
         );
+        settings.setSync("sortOrder", "folder-then-last-modified");
       },
     },
     // {
