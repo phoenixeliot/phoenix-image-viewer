@@ -18,6 +18,8 @@ import React, {
   useState,
 } from "react";
 import "./Application.css";
+import VolumeOffIcon from "@mui/icons-material/VolumeOff";
+import VolumeUpIcon from "@mui/icons-material/VolumeUp";
 
 // TODO: Figure out how to put this in a .d.ts file without it breaking everything when I import it
 declare global {
@@ -626,29 +628,20 @@ const Application: React.FC = () => {
               ))}
             </select>
           </div>
-          <div>
-            <span>
-              Showing image{" "}
-              <input
-                className="status-bar__input status-bar__input_numeric"
-                style={{
-                  textAlign: "right",
-                  width: `calc(${currentImageIndex.toString().length}ex)`,
-                  fontSize: "16px",
-                }}
-                type="number"
-                onChange={(e) =>
-                  setCurrentImageIndex(
-                    constrainIndex(Number(e.target.value) - 1),
-                  )
-                }
-                value={currentImageIndex + 1}
-              />
-              /<span>{filteredFileMetas.length}</span>{" "}
-            </span>
-            <span>
+          <div
+            style={{
+              display: "flex",
+              gap: "10px",
+              alignItems: "center",
+            }}
+          >
               Random index: {randomImageIndex + 1}/{filteredFileMetas.length}
             </span>
+            {muted ? (
+              <VolumeOffIcon fontSize="small" />
+            ) : (
+              <VolumeUpIcon fontSize="small" />
+            )}
           </div>
         </div>
         <div
