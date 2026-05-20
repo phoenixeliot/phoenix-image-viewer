@@ -278,8 +278,6 @@ const Application: React.FC = () => {
     setCurrentDirection("left");
   }, [numImages, setCurrentImageIndex]);
 
-  console.log({ currentImageIndex });
-
   const goToNextRandomImage = useCallback(() => {
     if (numImages === 0) return;
     if (activeElement.tagName === "INPUT") return; // Prevent randoming when in the search box
