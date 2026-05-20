@@ -625,6 +625,16 @@ const Application: React.FC = () => {
             ref={videoRef}
             onPlay={() => videoRef.current.focus()}
             muted={muted}
+            onKeyDown={(e) => {
+              const video = videoRef.current;
+              if (!video) return;
+              if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+                e.preventDefault();
+                const step = video.duration * 0.05;
+                video.currentTime +=
+                  e.key === "ArrowRight" ? step : -step;
+              }
+            }}
           />
         ) : (
           <ImageElement className="image" src={currentImageUrl} />
