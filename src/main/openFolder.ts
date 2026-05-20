@@ -1,6 +1,7 @@
 import { BrowserWindow, app, dialog } from "electron";
 import fs from "fs";
 import { getImagePaths, watchFolder } from "./filesystem/filesystem";
+import { readScores } from "./frequencyScores";
 
 export async function openOpenFolderDialog(
   browserWindow: BrowserWindow,
@@ -25,10 +26,12 @@ export async function openOpenFolderDialog(
       return { filePath, lastModified: stat.mtime, size: stat.size };
     }),
   );
+  const frequencyScores = readScores(rootPath);
   browserWindow.webContents.send("open-files", {
     rootPath,
     folderMetas,
     fileMetas,
+    frequencyScores,
   });
   watchFolder(rootPath, (events) => {
     browserWindow.webContents.send("watch-events", events);

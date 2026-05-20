@@ -49,6 +49,7 @@ const Application: React.FC = () => {
   const [showFileMoveDialog, setShowFileMoveDialog] = useState(false);
   const [showFocusFolderDialog, setShowFocusFolderDialog] = useState(false);
   const [prevImageIndex, setPrevImageIndex] = useState(0);
+  const [randomSequencePosition, setRandomSequencePosition] = useState(-1);
   const videoRef = useRef(null);
   const activeElement = useActiveElement();
   const [currentDirection, setCurrentDirection] = useState("right");
@@ -56,6 +57,9 @@ const Application: React.FC = () => {
   const [showFullPath, setShowFullPath] = useState(false);
 
   const [sortOrder, setSortOrder] = useState("name"); // Overwritten when we load settings async just below
+  const [frequencyScores, setFrequencyScores] = useState<
+    Record<string, number>
+  >({});
 
   // Load settings
   window.ipcRenderer
@@ -204,28 +208,41 @@ const Application: React.FC = () => {
     setCurrentImageIndex,
   ]);
 
-  // Shuffle the indexes so we can map them
+  // Shuffle the indexes so we can map them, weighted by frequencyScore
   const shuffledIndexes = useMemo(() => {
-    const unshuffled = [];
-    for (let i = 1; i < numImages; i++) {
-      unshuffled.push(i);
-    }
-    const shuffled = [0]; // Always start with image 0 at random index 0 as well
-    for (let i = 1; i < numImages; i++) {
-      const item = unshuffled.splice(
-        Math.floor(Math.random() * unshuffled.length),
-        1,
-      );
-      shuffled.push(...item);
-    }
-    return shuffled;
-  }, [numImages]);
+    if (numImages === 0) return [];
+    const weights = filteredFileMetas.map(
+      (m) => frequencyScores[m.filePath] ?? 1,
+    );
+
+    // Efraimidis-Spirakis weighted random permutation:
+    // key = U^(1/w) gives items with higher w stochastically larger keys
+    const indexed = Array.from({ length: numImages }, (_, i) => ({
+      filename: filteredFileMetas[i],
+      idx: i,
+      weight: weights[i],
+      key: Math.random() ** (1 / weights[i]) * 1000,
+    }));
+    indexed.sort((a, b) => b.key - a.key);
+    console.log({ weights, indexed });
+    return indexed.map(({ idx }) => idx);
+    // Note: frequencyScores intentionally omitted — score changes should not
+    // trigger a reshuffle. Scores are read from the current render's closure
+    // when filteredFileMetas changes (e.g. new folder open), which is the only
+    // time we want to rebuild the sequence.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [numImages, filteredFileMetas]);
+
+  // Reset to "not started" whenever the shuffled sequence is rebuilt
+  useEffect(() => {
+    setRandomSequencePosition(-1);
+  }, [shuffledIndexes]);
 
   // Map from [index -> random next image index]
   const randomIndexMap = useMemo(() => {
     const map: Record<number, number> = {};
-    shuffledIndexes.forEach((next, cur) => {
-      map[cur] = next;
+    shuffledIndexes.forEach((shuffledImageIndex, originalImageIndex) => {
+      map[originalImageIndex] = shuffledImageIndex;
     });
     return map;
   }, [shuffledIndexes]);
@@ -241,7 +258,7 @@ const Application: React.FC = () => {
   }, [randomIndexMap]);
   console.log({ shuffledIndexes, randomIndexMap, reverseRandomIndexMap });
 
-  const randomImageIndex = randomIndexMap[currentImageIndex];
+  const randomImageIndex = reverseRandomIndexMap[currentImageIndex];
 
   const goToOffset = useCallback(
     (offset: number) => {
@@ -277,41 +294,35 @@ const Application: React.FC = () => {
   const goToNextRandomImage = useCallback(() => {
     if (numImages === 0) return;
     if (activeElement.tagName === "INPUT") return; // Prevent randoming when in the search box
-    // Todo: un-confuse my names of "random index" and "regular index" and what they represent
-    const randomIndex = randomIndexMap[currentImageIndex];
-    const constrained = constrainIndex(randomIndex + 1);
-    const nextImageIndex = reverseRandomIndexMap[constrained];
-    console.log({
-      currentImageIndex,
-      randomIndex,
-      constrained,
-      nextRandomImage: nextImageIndex,
-    });
-    setCurrentImageIndex(nextImageIndex);
+    const nextPos =
+      randomSequencePosition === -1
+        ? 0
+        : (randomSequencePosition + 1) % shuffledIndexes.length;
+    setRandomSequencePosition(nextPos);
+    setCurrentImageIndex(shuffledIndexes[nextPos]);
   }, [
     numImages,
     activeElement.tagName,
-    randomIndexMap,
-    constrainIndex,
-    reverseRandomIndexMap,
-    currentImageIndex,
+    randomSequencePosition,
+    shuffledIndexes,
     setCurrentImageIndex,
   ]);
 
   const goToPrevRandomImage = useCallback(() => {
     if (numImages === 0) return;
     if (activeElement.tagName === "INPUT") return; // Prevent randoming when in the search box
-    const randomIndex = randomIndexMap[currentImageIndex];
-    const constrained = constrainIndex(randomIndex - 1);
-    const prevImageIndex = reverseRandomIndexMap[constrained];
-    setCurrentImageIndex(prevImageIndex);
+    const prevPos =
+      randomSequencePosition === -1
+        ? 0
+        : (randomSequencePosition - 1 + shuffledIndexes.length) %
+          shuffledIndexes.length;
+    setRandomSequencePosition(prevPos);
+    setCurrentImageIndex(shuffledIndexes[prevPos]);
   }, [
-    activeElement.tagName,
-    constrainIndex,
-    currentImageIndex,
     numImages,
-    randomIndexMap,
-    reverseRandomIndexMap,
+    activeElement.tagName,
+    randomSequencePosition,
+    shuffledIndexes,
     setCurrentImageIndex,
   ]);
 
@@ -322,11 +333,21 @@ const Application: React.FC = () => {
         rootPath: string;
         folderMetas: FileMeta[];
         fileMetas: FileMeta[];
+        frequencyScores?: Record<string, number>;
       },
     ) => {
       setRootPath(itemMetas.rootPath);
       setFolderMetas(itemMetas.folderMetas);
       setFileMetas(itemMetas.fileMetas);
+      if (itemMetas.frequencyScores) {
+        const absolute: Record<string, number> = {};
+        for (const [rel, score] of Object.entries(itemMetas.frequencyScores)) {
+          absolute[`${itemMetas.rootPath}/${rel}`] = score;
+        }
+        setFrequencyScores(absolute);
+      } else {
+        setFrequencyScores({});
+      }
     },
     [],
   );
@@ -484,6 +505,27 @@ const Application: React.FC = () => {
           return setIncludeImagesFromFolders(enabled);
         },
       ],
+      [
+        "adjust-frequency-score",
+        (event: IpcRendererEvent, { multiplier }: { multiplier: number }) => {
+          if (!currentImagePath || !rootPath) return;
+          setFrequencyScores((prev) => {
+            const updated = {
+              ...prev,
+              [currentImagePath]: (prev[currentImagePath] ?? 1) * multiplier,
+            };
+            const relative: Record<string, number> = {};
+            for (const [abs, score] of Object.entries(updated)) {
+              relative[abs.slice(rootPath.length + 1)] = score;
+            }
+            window.ipcRenderer.invoke("save-frequency-scores", {
+              rootPath,
+              scores: relative,
+            });
+            return updated;
+          });
+        },
+      ],
     ] as const;
     for (const [event, callback] of events) {
       window.ipcRenderer.on(event, callback);
@@ -504,6 +546,7 @@ const Application: React.FC = () => {
     openFocusFolderDialog,
     handleWatchEvents,
     currentImagePath,
+    rootPath,
     focusFilterInput,
     goToFirstImage,
     goToLastImage,
@@ -703,6 +746,11 @@ const Application: React.FC = () => {
             {/* <span>
               Random index: {randomImageIndex + 1}/{filteredFileMetas.length}
             </span> */}
+            {currentImagePath && (
+              <span style={{ flexShrink: 0 }}>
+                ×{(frequencyScores[currentImagePath] ?? 1).toFixed(2)}
+              </span>
+            )}
             {muted ? (
               <VolumeOffIcon fontSize="small" />
             ) : (

@@ -5,6 +5,7 @@ import { registerBrowseStateIpc } from "@main/browseState/browseStateIpc";
 import { windowStateKeeper } from "@main/stateKeeper";
 import { registerFilesystemIpc } from "@main/filesystem/filesystem";
 import { openOpenFolderDialog } from "@main/openFolder";
+import { registerFrequencyScoresIpc } from "@main/frequencyScores";
 
 // Electron Forge automatically creates these entry points
 declare const APP_WINDOW_WEBPACK_ENTRY: string;
@@ -84,6 +85,7 @@ export async function createAppWindow(): Promise<BrowserWindow> {
     registerTitlebarIpc(appWindow);
     registerFilesystemIpc(appWindow);
     registerBrowseStateIpc(mainWindowStateKeeper.setBrowseState);
+    registerFrequencyScoresIpc();
   }
 
   return appWindow;

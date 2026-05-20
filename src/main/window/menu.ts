@@ -245,6 +245,29 @@ menuTemplate.splice(3, 0, {
       type: "separator",
     },
     {
+      accelerator: "e",
+      label: "Show More Often",
+      click: (menuItem, browserWindow, modifiers) => {
+        console.debug("Activated menu item:", menuItem.label);
+        browserWindow.webContents.send("adjust-frequency-score", {
+          multiplier: 2,
+        });
+      },
+    },
+    {
+      accelerator: "t",
+      label: "Show Less Often",
+      click: (menuItem, browserWindow, modifiers) => {
+        console.debug("Activated menu item:", menuItem.label);
+        browserWindow.webContents.send("adjust-frequency-score", {
+          multiplier: 0.5,
+        });
+      },
+    },
+    {
+      type: "separator",
+    },
+    {
       label: "Order by File Name",
       type: "radio",
       checked: sortOrder === "name",
