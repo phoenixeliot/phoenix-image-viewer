@@ -16,6 +16,7 @@ import { openOpenFolderDialog } from "../openFolder";
 // Load settings
 console.debug("sortOrder:", settings.getSync("sortOrder"));
 const sortOrder = settings.getSync("sortOrder") || "name";
+const showFullPath = settings.getSync("showFullPath") ?? false;
 
 const menuTemplate = getDefaultMenuTemplate(app, shell);
 // Add File menu to list of top level menus
@@ -314,16 +315,31 @@ menuTemplate.splice(3, 0, {
 });
 const viewMenu = menuTemplate.find((menu) => menu.label === "View");
 // Add options to View menu
-(viewMenu.submenu as MenuItemConstructorOptions[]).push({
-  label: "Mute videos",
-  accelerator: "M",
-  type: "checkbox",
-  checked: true,
-  click: (menuItem, browserWindow, modifiers) => {
-    console.debug("Activated menu item:", menuItem.label);
-    browserWindow.webContents.send("set-muted", menuItem.checked);
+(viewMenu.submenu as MenuItemConstructorOptions[]).push(
+  {
+    type: "separator",
   },
-});
+  {
+    label: "Show full path",
+    type: "checkbox",
+    checked: showFullPath as boolean,
+    click: (menuItem, browserWindow, modifiers) => {
+      console.debug("Activated menu item:", menuItem.label);
+      browserWindow.webContents.send("set-show-full-path", menuItem.checked);
+      settings.setSync("showFullPath", menuItem.checked);
+    },
+  },
+  {
+    label: "Mute videos",
+    accelerator: "M",
+    type: "checkbox",
+    checked: true,
+    click: (menuItem, browserWindow, modifiers) => {
+      console.debug("Activated menu item:", menuItem.label);
+      browserWindow.webContents.send("set-muted", menuItem.checked);
+    },
+  },
+);
 const menu = Menu.buildFromTemplate(menuTemplate);
 
 // console.dir({ defaultMenu: menuTemplate, menu }, { depth: null });

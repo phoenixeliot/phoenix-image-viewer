@@ -53,6 +53,7 @@ const Application: React.FC = () => {
   const activeElement = useActiveElement();
   const [currentDirection, setCurrentDirection] = useState("right");
   const [muted, setMuted] = useState(true);
+  const [showFullPath, setShowFullPath] = useState(false);
 
   const [sortOrder, setSortOrder] = useState("name"); // Overwritten when we load settings async just below
 
@@ -65,6 +66,7 @@ const Application: React.FC = () => {
     })
     .then((settings) => {
       setSortOrder(settings.sortOrder);
+      if (settings.showFullPath != null) setShowFullPath(settings.showFullPath as boolean);
     });
 
   const originalFilePaths = useMemo(
@@ -471,6 +473,10 @@ const Application: React.FC = () => {
         (event: IpcRendererEvent, muted: boolean) => setMuted(muted),
       ],
       [
+        "set-show-full-path",
+        (event: IpcRendererEvent, value: boolean) => setShowFullPath(value),
+      ],
+      [
         "set-include-images-from-folders",
         (event: IpcRendererEvent, enabled: boolean) => {
           console.log("setIncludeImagesFromFolders", enabled);
@@ -565,9 +571,11 @@ const Application: React.FC = () => {
 
   useEffect(() => {
     document.title = currentImagePath
-      ? currentImagePath.split("/").at(-1)
+      ? showFullPath
+        ? currentImagePath
+        : currentImagePath.split("/").at(-1)
       : "Image Viewer";
-  }, [currentImagePath]);
+  }, [currentImagePath, showFullPath]);
 
   // If filtering reduced the max to below the current index, jump back to 0
   if (currentImageIndex > numImages) {
@@ -701,16 +709,6 @@ const Application: React.FC = () => {
               <VolumeUpIcon fontSize="small" />
             )}
           </div>
-        </div>
-        <div
-          style={{
-            backgroundColor: "black",
-            whiteSpace: "nowrap",
-            overflowX: "hidden",
-            textOverflow: "ellipsis",
-          }}
-        >
-          {currentImagePath}
         </div>
       </div>
     </>
