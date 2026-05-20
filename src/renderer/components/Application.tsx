@@ -657,8 +657,10 @@ const Application: React.FC = () => {
                 /<span>{filteredFileMetas.length}</span>{" "}
               </span>
             ) : null}
+            {/* Random index: For debugging the randomizer */}
+            {/* <span>
               Random index: {randomImageIndex + 1}/{filteredFileMetas.length}
-            </span>
+            </span> */}
             {muted ? (
               <VolumeOffIcon fontSize="small" />
             ) : (
