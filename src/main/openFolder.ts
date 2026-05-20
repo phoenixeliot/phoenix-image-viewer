@@ -1,10 +1,11 @@
-import { BrowserWindow, dialog } from "electron";
+import { BrowserWindow, app, dialog } from "electron";
 import fs from "fs";
 import { getImagePaths, watchFolder } from "./filesystem/filesystem";
 
 export async function openOpenFolderDialog(
   browserWindow: BrowserWindow,
 ): Promise<boolean> {
+  app.focus({ steal: true });
   const openResult = await dialog.showOpenDialog({
     properties: ["openDirectory"],
   });
