@@ -68,8 +68,6 @@ module.exports = {
             {
               // Window process name
               name: "app_window",
-              // React Hot Module Replacement (HMR)
-              rhmr: "react-hot-loader/patch",
               // HTML index file template
               html: path.join(rootDir, "src/renderer/app.html"),
               // App Renderer
