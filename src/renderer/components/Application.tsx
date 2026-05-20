@@ -238,16 +238,6 @@ const Application: React.FC = () => {
   }, [randomIndexMap]);
   console.log({ shuffledIndexes, randomIndexMap, reverseRandomIndexMap });
 
-  // Map from [index -> random previous image index]
-  // This allows going backwards in the random order
-  const prevRandomIndexMap = useMemo(() => {
-    const map: Record<number, number> = {};
-    shuffledIndexes.forEach((cur, prev) => {
-      map[cur] = prev;
-    });
-    return map;
-  }, [shuffledIndexes]);
-
   const randomImageIndex = randomIndexMap[currentImageIndex];
 
   const goToOffset = useCallback(
@@ -308,7 +298,6 @@ const Application: React.FC = () => {
   const goToPrevRandomImage = useCallback(() => {
     if (numImages === 0) return;
     if (activeElement.tagName === "INPUT") return; // Prevent randoming when in the search box
-    // const newImageIndex = prevRandomIndexMap[currentImageIndex];
     const randomIndex = randomIndexMap[currentImageIndex];
     const constrained = constrainIndex(randomIndex - 1);
     const prevImageIndex = reverseRandomIndexMap[constrained];
