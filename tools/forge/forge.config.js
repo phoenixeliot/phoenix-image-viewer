@@ -3,6 +3,22 @@ const path = require("path");
 const rootDir = process.cwd();
 
 module.exports = {
+  // Publishing rules
+  publishers: [
+    {
+      name: "@electron-forge/publisher-github",
+      config: {
+        repository: {
+          owner: "phoenixeliot",
+          name: "phoenix-image-viewer",
+        },
+        prerelease: false,
+        draft: true,
+      },
+    },
+  ],
+
+  // Predefined things
   // Packager Config
   packagerConfig: {
     // Create asar archive for main, renderer process files
