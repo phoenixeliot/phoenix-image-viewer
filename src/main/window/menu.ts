@@ -23,7 +23,7 @@ menuTemplate.splice(1, 0, {
       accelerator: "Command+O", // TODO: Add windows shortcut
       label: "Open...",
       click: async (menuItem, browserWindow, modifiers) => {
-        console.log(menuItem.label);
+        console.debug("Activated menu item:", menuItem.label);
         const openResult = await dialog.showOpenDialog({
           properties: ["openDirectory"],
         });
@@ -179,7 +179,7 @@ menuTemplate.splice(3, 0, {
       accelerator: ".",
       label: "Next Image",
       click: (menuItem, browserWindow, modifiers) => {
-        console.log(menuItem.label);
+        console.debug("Activated menu item:", menuItem.label);
         browserWindow.webContents.send("go-to-next-image");
       },
     },
@@ -187,7 +187,7 @@ menuTemplate.splice(3, 0, {
       accelerator: ",",
       label: "Previous Image",
       click: (menuItem, browserWindow, modifiers) => {
-        console.log(menuItem.label);
+        console.debug("Activated menu item:", menuItem.label);
         browserWindow.webContents.send("go-to-prev-image");
       },
     },
@@ -198,7 +198,7 @@ menuTemplate.splice(3, 0, {
       accelerator: "R",
       label: "Next Random Image",
       click: (menuItem, browserWindow, modifiers) => {
-        console.log(menuItem.label);
+        console.debug("Activated menu item:", menuItem.label);
         browserWindow.webContents.send("go-to-next-random-image");
       },
     },
@@ -206,7 +206,7 @@ menuTemplate.splice(3, 0, {
       accelerator: "Shift+R",
       label: "Previous Random Image",
       click: (menuItem, browserWindow, modifiers) => {
-        console.log(menuItem.label);
+        console.debug("Activated menu item:", menuItem.label);
         browserWindow.webContents.send("go-to-prev-random-image");
       },
     },
@@ -218,7 +218,7 @@ menuTemplate.splice(3, 0, {
       type: "radio",
       checked: true,
       click: (menuItem, browserWindow, modifiers) => {
-        console.log(menuItem.label);
+        console.debug("Activated menu item:", menuItem.label);
         browserWindow.webContents.send("set-sort-order", "name");
       },
     },
@@ -226,7 +226,7 @@ menuTemplate.splice(3, 0, {
       label: "Order by Folder + File Name",
       type: "radio",
       click: (menuItem, browserWindow, modifiers) => {
-        console.log(menuItem.label);
+        console.debug("Activated menu item:", menuItem.label);
         browserWindow.webContents.send("set-sort-order", "path");
       },
     },
@@ -234,7 +234,7 @@ menuTemplate.splice(3, 0, {
       label: "Order by Modification date",
       type: "radio",
       click: (menuItem, browserWindow, modifiers) => {
-        console.log(menuItem.label);
+        console.debug("Activated menu item:", menuItem.label);
         browserWindow.webContents.send("set-sort-order", "last-modified");
       },
     },
@@ -242,7 +242,7 @@ menuTemplate.splice(3, 0, {
       label: "Order by Folder + Modification date",
       type: "radio",
       click: (menuItem, browserWindow, modifiers) => {
-        console.log(menuItem.label);
+        console.debug("Activated menu item:", menuItem.label);
         browserWindow.webContents.send(
           "set-sort-order",
           "folder-then-last-modified",
@@ -254,7 +254,7 @@ menuTemplate.splice(3, 0, {
     //   type: "radio",
 
     //   click: (menuItem, browserWindow, modifiers) => {
-    //     console.log(menuItem.label);
+    //     console.debug("Activated menu item:", menuItem.label);
     //     browserWindow.webContents.send("set-sort-order", "file-size");
     //   },
     // },
@@ -266,7 +266,7 @@ menuTemplate.splice(3, 0, {
       type: "checkbox",
       checked: true,
       click: (menuItem, browserWindow, modifiers) => {
-        console.log(menuItem.label);
+        console.debug("Activated menu item:", menuItem.label);
         browserWindow.webContents.send(
           "set-include-images-from-folders",
           menuItem.checked,
@@ -283,7 +283,7 @@ const viewMenu = menuTemplate.find((menu) => menu.label === "View");
   type: "checkbox",
   checked: true,
   click: (menuItem, browserWindow, modifiers) => {
-    console.log(menuItem.label);
+    console.debug("Activated menu item:", menuItem.label);
     browserWindow.webContents.send("set-muted", menuItem.checked);
   },
 });
