@@ -563,6 +563,12 @@ const Application: React.FC = () => {
     });
   }, [currentImagePath, focusFolder, rootPath]);
 
+  useEffect(() => {
+    document.title = currentImagePath
+      ? currentImagePath.split("/").at(-1)
+      : "Image Viewer";
+  }, [currentImagePath]);
+
   // If filtering reduced the max to below the current index, jump back to 0
   if (currentImageIndex > numImages) {
     setCurrentImageIndex(0);
