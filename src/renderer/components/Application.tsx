@@ -66,7 +66,8 @@ const Application: React.FC = () => {
     })
     .then((settings) => {
       setSortOrder(settings.sortOrder);
-      if (settings.showFullPath != null) setShowFullPath(settings.showFullPath as boolean);
+      if (settings.showFullPath != null)
+        setShowFullPath(settings.showFullPath as boolean);
     });
 
   const originalFilePaths = useMemo(
@@ -639,8 +640,7 @@ const Application: React.FC = () => {
               if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
                 e.preventDefault();
                 const step = video.duration * 0.05;
-                video.currentTime +=
-                  e.key === "ArrowRight" ? step : -step;
+                video.currentTime += e.key === "ArrowRight" ? step : -step;
               }
             }}
           />
