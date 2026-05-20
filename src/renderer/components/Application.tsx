@@ -635,6 +635,28 @@ const Application: React.FC = () => {
               alignItems: "center",
             }}
           >
+            {filteredFileMetas.length ? (
+              <span style={{ flexShrink: 0 }}>
+                Showing image{" "}
+                <input
+                  className="status-bar__input status-bar__input_numeric"
+                  style={{
+                    padding: 0,
+                    textAlign: "right",
+                    width: `calc(${currentImageIndex.toString().length * 1.05}ex + 0px)`,
+                    fontSize: "16px",
+                  }}
+                  type="number"
+                  onChange={(e) =>
+                    setCurrentImageIndex(
+                      constrainIndex(Number(e.target.value) - 1),
+                    )
+                  }
+                  value={currentImageIndex + 1}
+                />
+                /<span>{filteredFileMetas.length}</span>{" "}
+              </span>
+            ) : null}
               Random index: {randomImageIndex + 1}/{filteredFileMetas.length}
             </span>
             {muted ? (
