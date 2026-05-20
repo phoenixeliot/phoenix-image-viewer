@@ -4,6 +4,7 @@ import { registerTitlebarIpc } from "@main/window/titlebarIpc";
 import { registerBrowseStateIpc } from "@main/browseState/browseStateIpc";
 import { windowStateKeeper } from "@main/stateKeeper";
 import { registerFilesystemIpc } from "@main/filesystem/filesystem";
+import { openOpenFolderDialog } from "@main/openFolder";
 
 // Electron Forge automatically creates these entry points
 declare const APP_WINDOW_WEBPACK_ENTRY: string;
@@ -49,8 +50,15 @@ export async function createAppWindow(): Promise<BrowserWindow> {
   appWindow.loadURL(APP_WINDOW_WEBPACK_ENTRY);
   // appWindow.loadURL("https://boards.4chan.org/gif/");
 
-  // Show window when its ready to
-  appWindow.on("ready-to-show", () => appWindow.show());
+  // Show window only after a folder is selected
+  appWindow.on("ready-to-show", async () => {
+    const opened = await openOpenFolderDialog(appWindow);
+    if (opened) {
+      appWindow.show();
+    } else {
+      app.quit();
+    }
+  });
 
   // Register Inter Process Communication for main process
   registerMainIPC();

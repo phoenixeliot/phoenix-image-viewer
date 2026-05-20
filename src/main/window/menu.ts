@@ -3,7 +3,6 @@ import {
   Menu,
   MenuItemConstructorOptions,
   app,
-  dialog,
   ipcMain,
   shell,
 } from "electron";
@@ -12,7 +11,7 @@ import settings from "electron-settings";
 import fs from "fs";
 import os from "os";
 import path from "path";
-import { getImagePaths, watchFolder } from "../filesystem/filesystem";
+import { openOpenFolderDialog } from "../openFolder";
 
 // Load settings
 console.debug("sortOrder:", settings.getSync("sortOrder"));
@@ -28,39 +27,7 @@ menuTemplate.splice(1, 0, {
       label: "Open...",
       click: async (menuItem, browserWindow, modifiers) => {
         console.debug("Activated menu item:", menuItem.label);
-        const openResult = await dialog.showOpenDialog({
-          properties: ["openDirectory"],
-        });
-        const rootPath = openResult.filePaths[0];
-        const folderAndFilePaths = await getImagePaths(rootPath);
-        const folderMetas = await Promise.all(
-          folderAndFilePaths.folders.map(async (filePath) => {
-            const stat = await fs.promises.stat(filePath);
-            return {
-              filePath,
-              lastModified: stat.mtime,
-            };
-          }),
-        );
-        const fileMetas = await Promise.all(
-          folderAndFilePaths.files.map(async (filePath) => {
-            const stat = await fs.promises.stat(filePath);
-            return {
-              filePath,
-              lastModified: stat.mtime,
-              size: stat.size,
-            };
-          }),
-        );
-        browserWindow.webContents.send("open-files", {
-          rootPath: rootPath,
-          folderMetas,
-          fileMetas,
-        });
-        watchFolder(rootPath, (events) => {
-          console.log("Got events", { events: events.slice(0, 3) });
-          browserWindow.webContents.send("watch-events", events);
-        });
+        openOpenFolderDialog(browserWindow);
       },
     },
     {
