@@ -264,6 +264,34 @@ const Application: React.FC = () => {
     setCurrentDirection("left");
   }, [constrainIndex, currentImageIndex, numImages, setCurrentImageIndex]);
 
+  const goForward10Images = useCallback(() => {
+    if (numImages === 0) return;
+    const newImageIndex = constrainIndex(currentImageIndex + 10);
+    setCurrentImageIndex(newImageIndex);
+    setCurrentDirection("right");
+  }, [constrainIndex, currentImageIndex, numImages, setCurrentImageIndex]);
+
+  const goForward100Images = useCallback(() => {
+    if (numImages === 0) return;
+    const newImageIndex = constrainIndex(currentImageIndex + 100);
+    setCurrentImageIndex(newImageIndex);
+    setCurrentDirection("right");
+  }, [constrainIndex, currentImageIndex, numImages, setCurrentImageIndex]);
+
+  const goBack10Images = useCallback(() => {
+    if (numImages === 0) return;
+    const newImageIndex = constrainIndex(currentImageIndex + numImages - 10);
+    setCurrentImageIndex(newImageIndex);
+    setCurrentDirection("left");
+  }, [constrainIndex, currentImageIndex, numImages, setCurrentImageIndex]);
+
+  const goBack100Images = useCallback(() => {
+    if (numImages === 0) return;
+    const newImageIndex = constrainIndex(currentImageIndex + numImages - 100);
+    setCurrentImageIndex(newImageIndex);
+    setCurrentDirection("left");
+  }, [constrainIndex, currentImageIndex, numImages, setCurrentImageIndex]);
+
   const goToFirstImage = useCallback(() => {
     if (numImages === 0) return;
     const newImageIndex = 0;
@@ -450,6 +478,10 @@ const Application: React.FC = () => {
       ["go-to-next-random-image", goToNextRandomImage],
       ["go-to-prev-random-image", goToPrevRandomImage],
       ["go-to-next-image", goToNextImage],
+      ["go-forward-10-images", goForward10Images],
+      ["go-forward-100-images", goForward100Images],
+      ["go-back-10-images", goBack10Images],
+      ["go-back-100-images", goBack100Images],
       ["go-to-prev-image", goToPrevImage],
       ["go-to-first-image", goToFirstImage],
       ["go-to-last-image", goToLastImage],

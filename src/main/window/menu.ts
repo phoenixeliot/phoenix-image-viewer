@@ -218,6 +218,46 @@ menuTemplate.splice(3, 0, {
       type: "separator",
     },
     {
+      label: "Skip",
+      submenu: [
+        {
+          accelerator: "Shift+.",
+          label: "10 Images Forward",
+          click: (menuItem, browserWindow, modifiers) => {
+            console.debug("Activated menu item:", menuItem.label);
+            browserWindow.webContents.send("go-forward-10-images");
+          },
+        },
+        {
+          accelerator: "Ctrl+.",
+          label: "100 Images Forward",
+          click: (menuItem, browserWindow, modifiers) => {
+            console.debug("Activated menu item:", menuItem.label);
+            browserWindow.webContents.send("go-forward-100-images");
+          },
+        },
+        {
+          accelerator: "Shift+,",
+          label: "10 Images Back",
+          click: (menuItem, browserWindow, modifiers) => {
+            console.debug("Activated menu item:", menuItem.label);
+            browserWindow.webContents.send("go-back-10-images");
+          },
+        },
+        {
+          accelerator: "Ctrl+,",
+          label: "100 Images Back",
+          click: (menuItem, browserWindow, modifiers) => {
+            console.debug("Activated menu item:", menuItem.label);
+            browserWindow.webContents.send("go-back-100-images");
+          },
+        },
+      ],
+    },
+    {
+      type: "separator",
+    },
+    {
       accelerator: "R",
       label: "Next Random Image",
       click: (menuItem, browserWindow, modifiers) => {
