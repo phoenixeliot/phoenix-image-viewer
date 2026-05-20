@@ -502,6 +502,8 @@ const Application: React.FC = () => {
     handleWatchEvents,
     currentImagePath,
     focusFilterInput,
+    goToFirstImage,
+    goToLastImage,
   ]);
 
   // images: 0 1 2 3 4
