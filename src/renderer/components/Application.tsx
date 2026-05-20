@@ -250,47 +250,22 @@ const Application: React.FC = () => {
 
   const randomImageIndex = randomIndexMap[currentImageIndex];
 
-  const goToNextImage = useCallback(() => {
-    if (numImages === 0) return;
-    const newImageIndex = constrainIndex(currentImageIndex + 1);
-    setCurrentImageIndex(newImageIndex);
-    setCurrentDirection("right");
-  }, [constrainIndex, currentImageIndex, numImages, setCurrentImageIndex]);
+  const goToOffset = useCallback(
+    (offset: number) => {
+      console.log({ offset });
+      if (numImages === 0) return;
+      setCurrentImageIndex(constrainIndex(currentImageIndex + offset));
+      setCurrentDirection(offset > 0 ? "right" : "left");
+    },
+    [constrainIndex, currentImageIndex, numImages, setCurrentImageIndex],
+  );
 
-  const goToPrevImage = useCallback(() => {
-    if (numImages === 0) return;
-    const newImageIndex = constrainIndex(currentImageIndex + numImages - 1);
-    setCurrentImageIndex(newImageIndex);
-    setCurrentDirection("left");
-  }, [constrainIndex, currentImageIndex, numImages, setCurrentImageIndex]);
-
-  const goForward10Images = useCallback(() => {
-    if (numImages === 0) return;
-    const newImageIndex = constrainIndex(currentImageIndex + 10);
-    setCurrentImageIndex(newImageIndex);
-    setCurrentDirection("right");
-  }, [constrainIndex, currentImageIndex, numImages, setCurrentImageIndex]);
-
-  const goForward100Images = useCallback(() => {
-    if (numImages === 0) return;
-    const newImageIndex = constrainIndex(currentImageIndex + 100);
-    setCurrentImageIndex(newImageIndex);
-    setCurrentDirection("right");
-  }, [constrainIndex, currentImageIndex, numImages, setCurrentImageIndex]);
-
-  const goBack10Images = useCallback(() => {
-    if (numImages === 0) return;
-    const newImageIndex = constrainIndex(currentImageIndex + numImages - 10);
-    setCurrentImageIndex(newImageIndex);
-    setCurrentDirection("left");
-  }, [constrainIndex, currentImageIndex, numImages, setCurrentImageIndex]);
-
-  const goBack100Images = useCallback(() => {
-    if (numImages === 0) return;
-    const newImageIndex = constrainIndex(currentImageIndex + numImages - 100);
-    setCurrentImageIndex(newImageIndex);
-    setCurrentDirection("left");
-  }, [constrainIndex, currentImageIndex, numImages, setCurrentImageIndex]);
+  const goToNextImage = useCallback(() => goToOffset(1), [goToOffset]);
+  const goToPrevImage = useCallback(() => goToOffset(-1), [goToOffset]);
+  const goForward10Images = useCallback(() => goToOffset(10), [goToOffset]);
+  const goForward100Images = useCallback(() => goToOffset(100), [goToOffset]);
+  const goBack10Images = useCallback(() => goToOffset(-10), [goToOffset]);
+  const goBack100Images = useCallback(() => goToOffset(-100), [goToOffset]);
 
   const goToFirstImage = useCallback(() => {
     if (numImages === 0) return;
@@ -536,6 +511,10 @@ const Application: React.FC = () => {
     focusFilterInput,
     goToFirstImage,
     goToLastImage,
+    goForward10Images,
+    goForward100Images,
+    goBack10Images,
+    goBack100Images,
   ]);
 
   // images: 0 1 2 3 4
