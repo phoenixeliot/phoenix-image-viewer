@@ -199,6 +199,25 @@ menuTemplate.splice(3, 0, {
       type: "separator",
     },
     {
+      accelerator: "Home",
+      label: "First Image",
+      click: (menuItem, browserWindow, modifiers) => {
+        console.debug("Activated menu item:", menuItem.label);
+        browserWindow.webContents.send("go-to-first-image");
+      },
+    },
+    {
+      accelerator: "End",
+      label: "Last Image",
+      click: (menuItem, browserWindow, modifiers) => {
+        console.debug("Activated menu item:", menuItem.label);
+        browserWindow.webContents.send("go-to-last-image");
+      },
+    },
+    {
+      type: "separator",
+    },
+    {
       accelerator: "R",
       label: "Next Random Image",
       click: (menuItem, browserWindow, modifiers) => {

@@ -264,6 +264,22 @@ const Application: React.FC = () => {
     setCurrentDirection("left");
   }, [constrainIndex, currentImageIndex, numImages, setCurrentImageIndex]);
 
+  const goToFirstImage = useCallback(() => {
+    if (numImages === 0) return;
+    const newImageIndex = 0;
+    setCurrentImageIndex(newImageIndex);
+    setCurrentDirection("right");
+  }, [numImages, setCurrentImageIndex]);
+
+  const goToLastImage = useCallback(() => {
+    if (numImages === 0) return;
+    const newImageIndex = numImages - 1;
+    setCurrentImageIndex(newImageIndex);
+    setCurrentDirection("left");
+  }, [numImages, setCurrentImageIndex]);
+
+  console.log({ currentImageIndex });
+
   const goToNextRandomImage = useCallback(() => {
     if (numImages === 0) return;
     if (activeElement.tagName === "INPUT") return; // Prevent randoming when in the search box
@@ -437,6 +453,8 @@ const Application: React.FC = () => {
       ["go-to-prev-random-image", goToPrevRandomImage],
       ["go-to-next-image", goToNextImage],
       ["go-to-prev-image", goToPrevImage],
+      ["go-to-first-image", goToFirstImage],
+      ["go-to-last-image", goToLastImage],
       ["open-files", openFiles],
       ["open-move-file-dialog", openMoveFileDialog],
       ["open-focus-folder-dialog", openFocusFolderDialog],
