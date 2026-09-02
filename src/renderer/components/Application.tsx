@@ -108,6 +108,10 @@ const Application: React.FC = () => {
           const aDate = a.lastModified.getTime();
           const bDate = b.lastModified.getTime();
           return aDate > bDate ? -1 : aDate < bDate ? 1 : 0;
+        } else if (sortOrder === "rating") {
+          const aScore = frequencyScores[a.filePath] ?? 1;
+          const bScore = frequencyScores[b.filePath] ?? 1;
+          return aScore > bScore ? -1 : aScore < bScore ? 1 : 0;
         } else {
           // Name is the default
           return a.filePath
@@ -116,7 +120,7 @@ const Application: React.FC = () => {
             .localeCompare(b.filePath.split("/").at(-1));
         }
       }),
-    [fileMetas, sortOrder],
+    [fileMetas, frequencyScores, sortOrder],
   );
 
   const filteredFileMetas = useMemo(() => {

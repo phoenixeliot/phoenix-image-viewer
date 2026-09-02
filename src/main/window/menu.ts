@@ -310,6 +310,16 @@ menuTemplate.splice(3, 0, {
         settings.setSync("sortOrder", "folder-then-last-modified");
       },
     },
+    {
+      label: "Order by Rating",
+      type: "radio",
+      checked: sortOrder === "rating",
+      click: (menuItem, browserWindow, modifiers) => {
+        console.debug("Activated menu item:", menuItem.label);
+        browserWindow.webContents.send("set-sort-order", "rating");
+        settings.setSync("sortOrder", "rating");
+      },
+    },
     // {
     //   label: "Order by File Size",
     //   type: "radio",
