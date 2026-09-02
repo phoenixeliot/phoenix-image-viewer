@@ -4,6 +4,9 @@
   "version": "1.0.0",
   "description": "",
   "main": ".webpack/main",
+  "engines": {
+    "pnpm": "9.x"
+  },
   "scripts": {
     "dev": "\"$npm_execpath\" run start",
     "start": "\"$npm_execpath\" install && cross-env NODE_ENV=development electron-forge start",
