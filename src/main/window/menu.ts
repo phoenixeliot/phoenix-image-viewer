@@ -268,6 +268,7 @@ menuTemplate.splice(3, 0, {
       type: "separator",
     },
     {
+      accelerator: "Cmd+1",
       label: "Order by File Name",
       type: "radio",
       checked: sortOrder === "name",
@@ -278,6 +279,7 @@ menuTemplate.splice(3, 0, {
       },
     },
     {
+      accelerator: "Cmd+2",
       label: "Order by Folder + File Name",
       type: "radio",
       checked: sortOrder === "path",
@@ -288,6 +290,7 @@ menuTemplate.splice(3, 0, {
       },
     },
     {
+      accelerator: "Cmd+3",
       label: "Order by Modification date",
       type: "radio",
       checked: sortOrder === "last-modified",
@@ -298,6 +301,7 @@ menuTemplate.splice(3, 0, {
       },
     },
     {
+      accelerator: "Cmd+4",
       label: "Order by Folder + Modification date",
       type: "radio",
       checked: sortOrder === "folder-then-last-modified",
@@ -311,6 +315,7 @@ menuTemplate.splice(3, 0, {
       },
     },
     {
+      accelerator: "Cmd+5",
       label: "Order by Rating",
       type: "radio",
       checked: sortOrder === "rating",
